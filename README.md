@@ -33,3 +33,7 @@ GitHub Pagesなどの静的ホスティングへ、このフォルダのファ�
 
 ## 注意
 コストコオンライン側の検索URLやサイト仕様が変更された場合、検索ボタンのURL修正が必要になることがあります。
+
+
+## 自動更新
+ChatGPT → GitHub → GitHub Actions → Cloudflare Pages の自動更新経路を設定済み。
