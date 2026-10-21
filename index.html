@@ -19,6 +19,7 @@ button,input{font:inherit}button{cursor:pointer}.app{max-width:720px;margin:auto
 .pricebox{background:var(--accentSoft);border-radius:16px;padding:14px}.onlinebox{background:#fff7ed;border-radius:16px;padding:14px}.goodbox{background:var(--goodSoft);border-radius:16px;padding:14px}.hero{font-size:42px;font-weight:900;color:var(--accent);letter-spacing:-1px}.online{font-size:27px;font-weight:900;color:var(--online)}.saving{font-size:36px;font-weight:900;color:var(--good)}
 .muted{color:var(--muted)}.small{font-size:12px}.note{font-size:12px;color:var(--muted);line-height:1.6;margin:9px 0 0}.hidden{display:none!important}.check{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:14px}.check input{width:20px;height:20px}.qty{display:flex;align-items:center;gap:8px}.qty button{width:42px;height:42px;border-radius:11px;border:1px solid var(--border);background:#fff;font-size:22px}.qty span{min-width:44px;text-align:center;font-weight:900}.summary{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:420px){.summary{grid-template-columns:1fr}}
 .ocrStatus{display:none;margin-top:12px;padding:12px;border-radius:12px;background:#f8fafc;border:1px solid var(--border);font-size:13px;line-height:1.6}.ocrStatus.show{display:block}.ocrStatus.ok{background:#eefbf4;border-color:#b7e4ca;color:#17643b}.ocrStatus.warn{background:#fff8e8;border-color:#f1d28b;color:#76520b}.ocrStatus.error{background:#fff0f0;border-color:#efb7b7;color:#8a2626}.autoField{background:#f2f8ff}.ocrTarget{display:none;margin-top:10px;padding:10px;border-radius:12px;background:#fff;border:1px dashed var(--border)}.ocrTarget.show{display:block}.ocrTarget img{width:100%;max-height:180px;object-fit:contain;border-radius:8px;background:#fafafa}.ocrTarget .small{margin-top:6px}.ocrDebug{display:none;margin-top:10px;padding:10px;border-radius:12px;background:#f8fafc;border:1px solid var(--border)}.ocrDebug.show{display:block}.ocrDebugGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ocrDebug img{width:100%;height:86px;object-fit:contain;background:#fff;border:1px solid var(--border);border-radius:8px}.ocrDebugText{font-size:11px;line-height:1.5;color:var(--muted);margin-top:7px;word-break:break-all}.manualFix{display:none;margin-top:10px;padding:12px;border-radius:12px;background:#fff8e8;border:1px solid #f1d28b}.manualFix.show{display:block}.manualFixImg{display:none;width:100%;height:auto;max-height:none;border-radius:10px;border:2px solid #f1d28b;background:#fff;touch-action:manipulation}.manualFixImg.show{display:block}.manualHint{font-size:12px;line-height:1.55;color:#76520b;margin:8px 0 0}.item{border:1px solid var(--border);border-radius:14px;padding:12px;margin-top:10px}.itemTitle{font-weight:900;line-height:1.45}.itemMeta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:13px;color:var(--muted)}.itemActions{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
+.marketSearch{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0}.searchLink{display:flex;align-items:center;justify-content:center;min-height:50px;border:1px solid #bfdcff;border-radius:12px;background:#f4f9ff;color:#075aa8;font-weight:800;font-size:14px;text-align:center;text-decoration:none;padding:10px 5px}.searchLink:active{background:#e3f0ff}.siteField{margin-top:10px}.marketStatus{font-size:13px;color:var(--muted);line-height:1.6;margin-top:8px}.marketRow{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--border)}.marketRow:first-child{border-top:0}.marketRow strong{font-size:21px;color:var(--online)}.marketRow.best strong{color:var(--good)}.marketRow .small{line-height:1.45}@media(max-width:390px){.marketSearch{grid-template-columns:1fr}.searchLink{min-height:44px}}
 </style>
 </head>
 <body>
@@ -26,10 +27,10 @@ button,input{font:inherit}button{cursor:pointer}.app{max-width:720px;margin:auto
 <header>
 <h1>コストコ価格比較</h1>
 <p class="lead">値札を撮るだけで商品番号・商品名・店頭価格を自動入力。最後の確認だけ人が行う、API課金なしのスマホ向けWebアプリです。</p>
-<div class="note" style="margin-top:6px">更新版 v0.8.1</div>
+<div class="note" style="margin-top:6px">更新版 v0.9.0</div>
 </header>
 
-<div class="topbar"><div class="row between"><span class="tag">Web MVP v0.8.1 値札OCR</span><button class="btn secondary smallbtn" id="cartTop" type="button">買い物一覧 <span id="topCount">0</span></button></div></div>
+<div class="topbar"><div class="row between"><span class="tag">Web MVP v0.9.0 価格比較</span><button class="btn secondary smallbtn" id="cartTop" type="button">買い物一覧 <span id="topCount">0</span></button></div></div>
 
 <section id="entry">
 <div class="card">
@@ -74,19 +75,27 @@ button,input{font:inherit}button{cursor:pointer}.app{max-width:720px;margin:auto
 <div><label class="label" for="name">商品名</label><input id="name" class="input" placeholder="例：ハウスブレンド コーヒー（豆）"></div>
 </div>
 <div style="margin-top:10px"><label class="label" for="store">コストコ店頭価格</label><input id="store" class="input" type="number" min="0" inputmode="numeric" placeholder="例：3468"></div>
-<div style="margin-top:10px"><label class="label" for="online">比較するオンライン価格</label><input id="online" class="input" type="number" min="0" inputmode="numeric" placeholder="例：3998"></div>
-<div class="grid2" style="margin-top:10px">
-<button id="search" class="btn ghost" type="button">コストコオンラインで検索</button>
-<button id="clear" class="btn secondary" type="button">入力をクリア</button>
+<div style="margin-top:10px"><label class="label" for="size">内容量・セット数（検索用・任意）</label><input id="size" class="input" placeholder="例：227g×2、1.13kg"></div>
+<div class="step" style="margin-top:16px">オンラインの商品を探す</div>
+<div class="marketSearch">
+<a id="searchCostco" class="searchLink" href="#" target="_blank" rel="noopener noreferrer">コストコで検索 ↗</a>
+<a id="searchAmazon" class="searchLink" href="#" target="_blank" rel="noopener noreferrer">Amazonで検索 ↗</a>
+<a id="searchRakuten" class="searchLink" href="#" target="_blank" rel="noopener noreferrer">楽天で検索 ↗</a>
 </div>
-<p class="note">商品番号・商品名・店頭価格は写真から自動入力します。誤認識がある場合だけ修正してください。オンライン価格は検索結果を確認して入力します。</p>
+<p id="searchHint" class="marketStatus">商品名を確認してから検索してください。商品番号だけでは見つからないことがあります。</p>
+<div class="step" style="margin-top:16px">確認できた価格を入力</div>
+<div class="siteField"><label class="label" for="online">コストコオンライン（税込・送料条件を確認）</label><input id="online" class="input" type="number" min="0" inputmode="numeric" placeholder="見つからない場合は空欄"></div>
+<div class="siteField"><label class="label" for="amazon">Amazon（税込・送料込みで確認）</label><input id="amazon" class="input" type="number" min="0" inputmode="numeric" placeholder="見つからない場合は空欄"></div>
+<div class="siteField"><label class="label" for="rakuten">楽天市場（税込・送料込みで確認）</label><input id="rakuten" class="input" type="number" min="0" inputmode="numeric" placeholder="見つからない場合は空欄"></div>
+<button id="clear" class="btn secondary" type="button" style="margin-top:12px">入力をクリア</button>
+<p class="note">サイトを開いて「同じ商品・同じ容量・セット数」の価格だけ入力してください。見つからないサイトは空欄でOK。価格は自動取得せず、入力したサイトだけを比較します。送料やポイントの条件も確認してください。</p>
 </div>
 
 <div class="card hidden" id="compare">
 <div class="step">STEP 3</div><h2 class="title">比較結果</h2>
 <div class="pricebox"><div class="small muted">コストコ店頭価格</div><div id="storeView" class="hero">—</div></div>
-<div class="onlinebox" style="margin-top:10px"><div class="small muted">オンライン価格</div><div id="onlineView" class="online">—</div></div>
-<div class="goodbox" style="margin-top:10px"><div class="small muted">価格差</div><div id="diffView" class="saving">—</div><div id="judge" style="margin-top:5px;font-weight:800"></div></div>
+<div class="onlinebox" style="margin-top:10px"><div class="small muted">確認できたオンライン価格</div><div id="marketRows"></div><div id="marketEmpty" class="marketStatus">比較先の価格を入力すると、価格差を表示します。</div></div>
+<div class="goodbox" style="margin-top:10px"><div class="small muted">入力した比較先との価格差</div><div id="diffView" class="saving">比較待ち</div><div id="judge" style="margin-top:5px;font-weight:800"></div><div class="note">すべてのサイトを調べた最安値ではありません。同一商品・同一容量の価格のみ比較してください。</div></div>
 
 <label class="check"><input id="buy" type="checkbox"><span><strong>この商品を買う</strong></span></label>
 <div id="qtyWrap" class="hidden" style="margin-top:12px">
@@ -102,7 +111,7 @@ button,input{font:inherit}button{cursor:pointer}.app{max-width:720px;margin:auto
 <div class="step">買い物中</div><h2 class="title">今回の買い物</h2>
 <div class="summary">
 <div class="pricebox"><div class="small muted">購入商品</div><div id="cartCount" style="font-size:28px;font-weight:900">0商品</div></div>
-<div class="goodbox"><div class="small muted">ここまでの節約額</div><div id="cartSaving" style="font-size:28px;font-weight:900;color:var(--good)">0円</div></div>
+<div class="goodbox"><div class="small muted">比較可能な商品の価格差</div><div id="cartSaving" style="font-size:28px;font-weight:900;color:var(--good)">未比較</div><div class="small muted" id="cartMatched"></div></div>
 </div>
 <div id="cartList"></div><p id="empty" class="note">購入予定の商品はまだありません。</p>
 </div>
@@ -114,9 +123,9 @@ button,input{font:inherit}button{cursor:pointer}.app{max-width:720px;margin:auto
 <div class="step">買い物終了</div><h2 class="title">今日どれだけ得した？</h2>
 <div class="summary">
 <div class="pricebox"><div class="small muted">コストコ店頭合計</div><div id="totalStore" class="hero" style="font-size:32px">0円</div></div>
-<div class="onlinebox"><div class="small muted">オンライン合計</div><div id="totalOnline" class="online">0円</div></div>
+<div class="onlinebox"><div class="small muted">比較できた商品のオンライン最安合計</div><div id="totalOnline" class="online">未比較</div></div>
 </div>
-<div class="goodbox" style="margin-top:10px;text-align:center"><div class="small muted">今日の節約額</div><div id="totalSave" class="saving">0円</div><div id="pct" style="font-weight:800;margin-top:4px"></div></div>
+<div class="goodbox" style="margin-top:10px;text-align:center"><div class="small muted">比較できた商品の価格差</div><div id="totalSave" class="saving">未比較</div><div id="pct" style="font-weight:800;margin-top:4px"></div><p class="note">オンライン合計と価格差は、比較先の価格を入力した商品だけを対象にしています。未比較商品を含む店頭合計とは直接比較しません。</p></div>
 <div style="margin-top:16px"><h3 style="font-size:16px;margin:0">購入商品</h3><p class="note">ここでも個数変更・削除ができます。</p><div id="resultList"></div></div>
 <div class="grid2" style="margin-top:16px"><button id="addResult" class="btn" type="button">＋ 商品を追加する</button><button id="reset" class="btn danger" type="button">リセット</button></div>
 </div>
@@ -130,26 +139,78 @@ const state={cart:JSON.parse(localStorage.getItem('costcoCompareCart')||'[]'),qt
 const screens=[$('entry'),$('cart'),$('result')];
 function show(el){screens.forEach(x=>x.classList.add('hidden'));el.classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'})}
 function save(){localStorage.setItem('costcoCompareCart',JSON.stringify(state.cart))}
-function totals(){let store=0,online=0;state.cart.forEach(i=>{store+=i.store*i.qty;online+=i.online*i.qty});return{store,online,saving:online-store}}
+const marketNames={costco:'コストコオンライン',amazon:'Amazon',rakuten:'楽天市場'};
+function priceOffers(x){
+ const costco=Number(x.online)||0,amazon=Number(x.amazon)||0,rakuten=Number(x.rakuten)||0;
+ return [{site:'costco',price:costco},{site:'amazon',price:amazon},{site:'rakuten',price:rakuten}]
+  .filter(o=>Number.isFinite(o.price)&&o.price>0).sort((a,b)=>a.price-b.price);
+}
+function bestOffer(x){return priceOffers(x)[0]||null}
+function entryData(){return {online:$('online').value,amazon:$('amazon').value,rakuten:$('rakuten').value}}
+function totals(){
+ let store=0,online=0,matchedStore=0,matchedCount=0;
+ state.cart.forEach(i=>{const n=Math.max(1,Number(i.qty)||1);store+=Number(i.store)*n;
+ const best=bestOffer(i);if(best){online+=best.price*n;matchedStore+=Number(i.store)*n;matchedCount++}});
+ return {store,online,matchedStore,matchedCount,saving:online-matchedStore};
+}
 function compare(){
- const store=Number($('store').value),online=Number($('online').value),ok=store>0&&online>0;
+ const store=Number($('store').value),ok=Number.isFinite(store)&&store>0;
  $('compare').classList.toggle('hidden',!ok);if(!ok)return;
- const d=online-store,p=Math.abs(d)/online*100;
- $('storeView').textContent=yen(store);$('onlineView').textContent=yen(online);
- $('diffView').textContent=d>=0?`${yen(d)} お得`:`${yen(Math.abs(d))} 高い`;
- $('diffView').style.color=d>=0?'var(--good)':'var(--danger)';
- $('judge').textContent=d>0?`店頭の方が約 ${p.toFixed(1)}% 安いです`:d<0?`オンラインの方が約 ${p.toFixed(1)}% 安いです`:'同じ価格です';
+ $('storeView').textContent=yen(store);
+ const offers=priceOffers(entryData()),best=offers[0]||null;
+ const rows=$('marketRows');rows.innerHTML='';
+ offers.forEach(o=>{
+  const el=document.createElement('div');el.className='marketRow'+(o===best?' best':'');
+  const label=document.createElement('div');label.className='small';label.textContent=marketNames[o.site]+(o===best?'（入力中の最安）':'');
+  const price=document.createElement('strong');price.textContent=yen(o.price);
+  el.append(label,price);rows.appendChild(el);
+ });
+ $('marketEmpty').classList.toggle('hidden',offers.length>0);
+ if(!best){$('diffView').textContent='比較待ち';$('diffView').style.color='var(--muted)';$('judge').textContent='比較先が見つからない場合も商品を買い物一覧に追加できます。';}
+ else{
+  const d=best.price-store,p=Math.abs(d)/best.price*100;
+  $('diffView').textContent=d>=0?`${yen(d)} お得`:`${yen(Math.abs(d))} 高い`;
+  $('diffView').style.color=d>=0?'var(--good)':'var(--danger)';
+  $('judge').textContent=d>0?`店頭の方が${marketNames[best.site]}より約 ${p.toFixed(1)}% 安いです`:d<0?`${marketNames[best.site]}の方が約 ${p.toFixed(1)}% 安いです`:'店頭とオンラインが同じ価格です';
+ }
  qtyText();
 }
-function qtyText(){ $('qty').textContent=state.qty;const d=(Number($('online').value)-Number($('store').value))*state.qty;$('qtySave').textContent=d>=0?`${state.qty}個なら ${yen(d)} お得です`:`${state.qty}個ならオンラインより ${yen(Math.abs(d))} 高くなります`; }
+function qtyText(){
+ $('qty').textContent=state.qty;
+ const best=bestOffer(entryData());
+ if(!best){$('qtySave').textContent='オンライン価格が未入力のため、購入個数の価格差は未計算です。';return}
+ const d=(best.price-Number($('store').value))*state.qty;
+ $('qtySave').textContent=d>=0?`${state.qty}個なら ${yen(d)} お得です（${marketNames[best.site]}比）`:`${state.qty}個なら ${marketNames[best.site]}より ${yen(Math.abs(d))} 高くなります`;
+}
+function searchWords(){
+ const name=$('name').value.trim().replace(/\s+/g,' '),size=$('size').value.trim().replace(/\s+/g,' '),no=$('no').value.trim();
+ return {name,size,no,query:[name,size].filter(Boolean).join(' ').trim()}
+}
+function updateSearchLinks(){
+ const {query,no}=searchWords();
+ const defs=[
+  ['searchCostco','https://www.costco.co.jp/CatalogSearch?keyword=',query||no],
+  ['searchAmazon','https://www.amazon.co.jp/s?k=',query],
+  ['searchRakuten','https://search.rakuten.co.jp/search/mall/',query]
+ ];
+ defs.forEach(([id,base,q])=>{$(id).href=q?base+encodeURIComponent(q):'#'});
+ $('searchHint').textContent=query?
+ '検索語：'+query+'。価格は同じ容量・セット数のものを確認して入力してください。':
+ no?'商品番号のみの場合はコストコ検索を利用できます。Amazon・楽天検索には商品名が必要です。':
+ '商品名を確認すると3サイトを検索できます。';
+}
 function clearEntry(){
- ['no','name','store','online'].forEach(id=>{$(id).value='';$(id).classList.remove('autoField')});$('buy').checked=false;$('qtyWrap').classList.add('hidden');$('compare').classList.add('hidden');state.qty=1;$('qty').textContent='1';$('cameraPhoto').value='';$('libraryPhoto').value='';$('filePhoto').value='';
- if(state.url)URL.revokeObjectURL(state.url);state.url=null;state.lastPhotoFile=null;state.tagCanvas=null;state.manualMode=null;$('preview').src='';$('preview').style.display='none';$('ocrTarget').classList.remove('show');$('ocrTargetImg').src='';$('ocrDebug').classList.remove('show');$('debugItemImg').src='';$('debugPriceImg').src='';$('debugCandidates').textContent='';$('manualFix').classList.remove('show');$('manualFixImg').classList.remove('show');$('manualFixImg').src='';setOcrStatus('', '');
+ ['no','name','store','online','amazon','rakuten','size'].forEach(id=>{$(id).value='';$(id).classList.remove('autoField')});$('buy').checked=false;$('qtyWrap').classList.add('hidden');$('compare').classList.add('hidden');state.qty=1;$('qty').textContent='1';$('cameraPhoto').value='';$('libraryPhoto').value='';$('filePhoto').value='';
+ if(state.url)URL.revokeObjectURL(state.url);state.url=null;state.lastPhotoFile=null;state.tagCanvas=null;state.manualMode=null;$('preview').src='';$('preview').style.display='none';$('ocrTarget').classList.remove('show');$('ocrTargetImg').src='';$('ocrDebug').classList.remove('show');$('debugItemImg').src='';$('debugPriceImg').src='';$('debugCandidates').textContent='';$('manualFix').classList.remove('show');$('manualFixImg').classList.remove('show');$('manualFixImg').src='';setOcrStatus('', '');updateSearchLinks();
 }
 function makeItem(item,index,mode){
  const box=document.createElement('div');box.className='item';
  const title=document.createElement('div');title.className='itemTitle';title.textContent=item.name||`商品番号 ${item.no||'未入力'}`;
- const meta=document.createElement('div');meta.className='itemMeta';meta.innerHTML=`<span>店頭 ${yen(item.store)} / オンライン ${yen(item.online)}</span><strong>${yen((item.online-item.store)*item.qty)} お得</strong>`;
+ const meta=document.createElement('div');meta.className='itemMeta';
+ const offer=bestOffer(item),label=document.createElement('span'),gain=document.createElement('strong');
+ label.textContent='店頭 '+yen(item.store)+(offer?' / '+marketNames[offer.site]+' '+yen(offer.price):' / オンライン未比較');
+ gain.textContent=offer?(offer.price>=item.store?yen((offer.price-item.store)*item.qty)+' お得':yen((item.store-offer.price)*item.qty)+' 高い'):'価格差未計算';
+ meta.append(label,gain);
  const actions=document.createElement('div');actions.className='itemActions';const q=document.createElement('div');q.className='qty';
  const m=document.createElement('button');m.type='button';m.textContent='−';const c=document.createElement('span');c.textContent=`${item.qty}個`;const p=document.createElement('button');p.type='button';p.textContent='＋';
  m.onclick=()=>{item.qty=Math.max(1,item.qty-1);save();renderCart();if(mode==='result')renderResult()};p.onclick=()=>{item.qty=Math.min(99,item.qty+1);save();renderCart();if(mode==='result')renderResult()};q.append(m,c,p);
@@ -157,10 +218,12 @@ function makeItem(item,index,mode){
  actions.append(q,del);box.append(title,meta,actions);return box;
 }
 function renderCart(){
- $('cartList').innerHTML='';state.cart.forEach((i,x)=>$('cartList').appendChild(makeItem(i,x,'cart')));$('empty').classList.toggle('hidden',state.cart.length>0);$('cartCount').textContent=`${state.cart.length}商品`;$('topCount').textContent=state.cart.length;$('cartSaving').textContent=yen(totals().saving);
+ $('cartList').innerHTML='';state.cart.forEach((i,x)=>$('cartList').appendChild(makeItem(i,x,'cart')));$('empty').classList.toggle('hidden',state.cart.length>0);$('cartCount').textContent=`${state.cart.length}商品`;$('topCount').textContent=state.cart.length;const t=totals();$('cartSaving').textContent=t.matchedCount?yen(t.saving):'未比較';$('cartMatched').textContent=t.matchedCount?state.cart.length+'商品のうち'+t.matchedCount+'商品を比較':'価格を入力した商品はまだありません';
 }
 function renderResult(){
- const t=totals();$('totalStore').textContent=yen(t.store);$('totalOnline').textContent=yen(t.online);$('totalSave').textContent=yen(t.saving);$('pct').textContent=t.online>0?`オンライン比 約 ${(t.saving/t.online*100).toFixed(1)}% 節約`:'';
+ const t=totals();$('totalStore').textContent=yen(t.store);$('totalOnline').textContent=t.matchedCount?yen(t.online):'未比較';$('totalSave').textContent=t.matchedCount?yen(t.saving):'未比較';
+ $('totalSave').style.color=t.saving<0?'var(--danger)':'var(--good)';
+ $('pct').textContent=t.matchedCount?`${state.cart.length}商品のうち${t.matchedCount}商品を比較。入力したオンライン最安価格比 ${Math.abs(t.saving/t.online*100).toFixed(1)}% ${t.saving>=0?'お得':'高い'}`:'比較価格がまだありません';
  $('resultList').innerHTML='';state.cart.forEach((i,x)=>$('resultList').appendChild(makeItem(i,x,'result')));
 }
 
@@ -1148,10 +1211,13 @@ $('ocrRetry').addEventListener('click',()=>{
  tesseractLoadPromise=null;
  runOcr(state.lastPhotoFile);
 });
-$('store').oninput=compare;$('online').oninput=compare;$('buy').onchange=()=>{$('qtyWrap').classList.toggle('hidden',!$('buy').checked);qtyText()};
+$('store').oninput=compare;['online','amazon','rakuten'].forEach(id=>{$(id).oninput=compare});
+['name','no','size'].forEach(id=>{$(id).addEventListener('input',updateSearchLinks)});['searchCostco','searchAmazon','searchRakuten'].forEach(id=>{
+ $(id).addEventListener('click',e=>{if($(id).getAttribute('href')==='#'){e.preventDefault();alert('検索するには商品名を入力してください。コストコだけは商品番号でも検索できます。')}})
+});$('buy').onchange=()=>{$('qtyWrap').classList.toggle('hidden',!$('buy').checked);qtyText()};
 $('minus').onclick=()=>{state.qty=Math.max(1,state.qty-1);qtyText()};$('plus').onclick=()=>{state.qty=Math.min(99,state.qty+1);qtyText()};$('clear').onclick=clearEntry;
-$('search').onclick=()=>{const q=$('no').value.trim()||$('name').value.trim();if(!q){alert('商品番号か商品名を入力してください。');return}window.open(`https://www.costco.co.jp/CatalogSearch?keyword=${encodeURIComponent(q)}`,'_blank','noopener')};
-$('add').onclick=()=>{const store=Number($('store').value),online=Number($('online').value);if(!(store>0&&online>0)){alert('店頭価格とオンライン価格を入力してください。');return}if($('buy').checked){const no=$('no').value.trim(),name=$('name').value.trim();state.cart.push({no,name,store,online,qty:state.qty});try{if(no&&name){const dict=JSON.parse(localStorage.getItem('costcoProductDict')||'{}');dict[no]=name;localStorage.setItem('costcoProductDict',JSON.stringify(dict));}}catch{}save()}renderCart();clearEntry();show($('cart'))};
+updateSearchLinks();
+$('add').onclick=()=>{const store=Number($('store').value);if(!(store>0)){alert('コストコ店頭価格を入力してください。');return}if($('buy').checked){const no=$('no').value.trim(),name=$('name').value.trim();state.cart.push({no,name,store,online:Number($('online').value)||0,amazon:Number($('amazon').value)||0,rakuten:Number($('rakuten').value)||0,qty:state.qty});try{if(no&&name){const dict=JSON.parse(localStorage.getItem('costcoProductDict')||'{}');dict[no]=name;localStorage.setItem('costcoProductDict',JSON.stringify(dict));}}catch{}save()}renderCart();clearEntry();show($('cart'))};
 $('addMore').onclick=()=>show($('entry'));$('addResult').onclick=()=>show($('entry'));$('finish').onclick=()=>{renderResult();show($('result'))};$('cartTop').onclick=()=>{renderCart();show($('cart'))};
 $('reset').onclick=()=>{if(!confirm('今回の買い物をすべてリセットしますか？'))return;state.cart=[];save();renderCart();clearEntry();show($('entry'))};
 renderCart();
