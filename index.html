@@ -26,10 +26,10 @@ button,input{font:inherit}button{cursor:pointer}.app{max-width:720px;margin:auto
 <header>
 <h1>コストコ価格比較</h1>
 <p class="lead">値札を撮るだけで商品番号・商品名・店頭価格を自動入力。最後の確認だけ人が行う、API課金なしのスマホ向けWebアプリです。</p>
-<div class="note" style="margin-top:6px">更新版 v0.6.3</div>
+<div class="note" style="margin-top:6px">更新版 v0.6.4</div>
 </header>
 
-<div class="topbar"><div class="row between"><span class="tag">Web MVP v0.6.3 値札OCR</span><button class="btn secondary smallbtn" id="cartTop" type="button">買い物一覧 <span id="topCount">0</span></button></div></div>
+<div class="topbar"><div class="row between"><span class="tag">Web MVP v0.6.4 値札OCR</span><button class="btn secondary smallbtn" id="cartTop" type="button">買い物一覧 <span id="topCount">0</span></button></div></div>
 
 <section id="entry">
 <div class="card">
@@ -343,6 +343,69 @@ async function makeOcrImage(file){
 function canvasToPreview(canvas){
  try{return canvas.toDataURL('image/jpeg',.88)}catch{return ''}
 }
+function fitLine(points){
+ if(points.length<2)return null;
+ let sx=0,sy=0,sxx=0,sxy=0;
+ for(const [x,y] of points){sx+=x;sy+=y;sxx+=x*x;sxy+=x*y;}
+ const n=points.length,den=n*sxx-sx*sx;
+ if(Math.abs(den)<1e-9)return null;
+ const a=(n*sxy-sx*sy)/den;
+ const b=(sy-a*sx)/n;
+ return {a,b};
+}
+function estimateLabelAngle(source){
+ const ctx=source.getContext('2d',{willReadFrequently:true});
+ const {data}=ctx.getImageData(0,0,source.width,source.height);
+ const w=source.width,h=source.height;
+ const bright=(x,y)=>{
+   if(x<0||y<0||x>=w||y>=h)return false;
+   const i=(y*w+x)*4,r=data[i],g=data[i+1],b=data[i+2];
+   const mx=Math.max(r,g,b),mn=Math.min(r,g,b),lum=.299*r+.587*g+.114*b;
+   return lum>165 && mx-mn<78;
+ };
+ const pts=[],step=Math.max(5,Math.round(w/90));
+ for(let x=Math.round(w*.07);x<w*.93;x+=step){
+   let found=-1;
+   for(let y=0;y<h*.42;y++){
+     if(bright(x,y)&&bright(x,Math.min(h-1,y+2))&&bright(x,Math.min(h-1,y+4))){
+       found=y;break;
+     }
+   }
+   if(found>=0)pts.push([x,found]);
+ }
+ let fit=fitLine(pts);
+ if(!fit)return 0;
+ const residuals=pts.map(([x,y])=>Math.abs(y-(fit.a*x+fit.b))).sort((a,b)=>a-b);
+ const med=residuals[Math.floor(residuals.length/2)]||0;
+ const kept=pts.filter(([x,y])=>Math.abs(y-(fit.a*x+fit.b))<=Math.max(5,med*2.8));
+ fit=fitLine(kept)||fit;
+ const angle=Math.atan(fit.a)*180/Math.PI;
+ return Math.abs(angle)<=12?angle:0;
+}
+function rotateCanvas(source,angleDeg){
+ if(Math.abs(angleDeg)<.35)return source;
+ const a=angleDeg*Math.PI/180,cos=Math.abs(Math.cos(a)),sin=Math.abs(Math.sin(a));
+ const nw=Math.ceil(source.width*cos+source.height*sin);
+ const nh=Math.ceil(source.height*cos+source.width*sin);
+ const c=document.createElement('canvas');c.width=nw;c.height=nh;
+ const ctx=c.getContext('2d',{willReadFrequently:true});
+ ctx.fillStyle='#fff';ctx.fillRect(0,0,nw,nh);
+ ctx.translate(nw/2,nh/2);ctx.rotate(a);ctx.drawImage(source,-source.width/2,-source.height/2);
+ return c;
+}
+function deskewTag(source){
+ const angle=estimateLabelAngle(source);
+ if(Math.abs(angle)<.35)return source;
+ const rotated=rotateCanvas(source,-angle);
+ const rect=findBrightLabelRect(rotated);
+ if(rect){
+   const trimmed=cropCanvas(rotated,rect,1900);
+   trimmed._deskewAngle=angle;
+   return trimmed;
+ }
+ rotated._deskewAngle=angle;
+ return rotated;
+}
 
 let tesseractLoadPromise=null;
 function loadExternalScript(src, timeoutMs=15000){
@@ -517,7 +580,8 @@ async function runOcr(file){
      label={x:full.width*.06,y:full.height*.04,w:full.width*.88,h:full.height*.58};
    }
 
-   const tag=cropCanvas(full,label,1900);
+   let tag=cropCanvas(full,label,1900);
+   tag=deskewTag(tag);
    const tagGray=preprocessCanvas(tag,'gray');
    const previewUrl=canvasToPreview(tag);
    if(previewUrl){
@@ -531,13 +595,13 @@ async function runOcr(file){
    const itemBase=cropCanvas(tag,itemRect,1700);
    const itemGray=preprocessCanvas(itemBase,'gray');
    const itemBinary=preprocessCanvas(itemBase,'binary');
-   await worker.setParameters({
-     tessedit_pageseg_mode:'7',
-     tessedit_char_whitelist:'0123456789',
-     preserve_interword_spaces:'1'
-   });
    const itemPasses=[];
-   for(const c of [itemBase,itemGray,itemBinary]){
+   for(const [c,psm] of [[itemGray,'6'],[itemBinary,'6'],[itemBase,'7']]){
+     await worker.setParameters({
+       tessedit_pageseg_mode:psm,
+       tessedit_char_whitelist:'0123456789',
+       preserve_interword_spaces:'1'
+     });
      const r=await worker.recognize(c);
      itemPasses.push({text:r.data.text||'',confidence:r.data.confidence||0});
    }
@@ -549,13 +613,13 @@ async function runOcr(file){
    const priceBase=cropCanvas(tag,priceRect,1900);
    const priceGray=preprocessCanvas(priceBase,'gray');
    const priceBinary=preprocessCanvas(priceBase,'binary');
-   await worker.setParameters({
-     tessedit_pageseg_mode:'7',
-     tessedit_char_whitelist:'0123456789,',
-     preserve_interword_spaces:'1'
-   });
    const pricePasses=[];
-   for(const c of [priceBase,priceGray,priceBinary]){
+   for(const [c,psm] of [[priceBase,'13'],[priceBinary,'13'],[priceGray,'6']]){
+     await worker.setParameters({
+       tessedit_pageseg_mode:psm,
+       tessedit_char_whitelist:'0123456789,',
+       preserve_interword_spaces:'1'
+     });
      const r=await worker.recognize(c);
      pricePasses.push({text:r.data.text||'',confidence:r.data.confidence||0});
    }
@@ -564,14 +628,21 @@ async function runOcr(file){
    setOcrStatus('商品名を読み取っています…');
    // 商品番号の下〜中央左だけを商品名として読む。メーカー名より商品説明の長い日本語行を優先。
    const nameRect={x:tag.width*.015,y:tag.height*.12,w:tag.width*.78,h:tag.height*.50};
-   const nameCrop=preprocessCanvas(cropCanvas(tag,nameRect,1800),'gray');
-   await worker.setParameters({
-     tessedit_pageseg_mode:'6',
-     tessedit_char_whitelist:'',
-     preserve_interword_spaces:'1'
-   });
-   const nameRes=await worker.recognize(nameCrop);
-   let name=parseNameRegion(nameRes.data.text||'');
+   const nameBase=cropCanvas(tag,nameRect,1800);
+   const nameGray=preprocessCanvas(nameBase,'gray');
+   const nameResults=[];
+   for(const [c,psm] of [[nameGray,'6'],[nameBase,'11']]){
+     await worker.setParameters({
+       tessedit_pageseg_mode:psm,
+       tessedit_char_whitelist:'',
+       preserve_interword_spaces:'1'
+     });
+     const r=await worker.recognize(c);
+     const value=parseNameRegion(r.data.text||'');
+     if(value)nameResults.push({value,score:(r.data.confidence||0)+Math.min(40,value.length*2)+( /[ぁ-んァ-ヶ一-龠]/.test(value)?30:0)});
+   }
+   nameResults.sort((a,b)=>b.score-a.score);
+   let name=nameResults[0]?.value||'';
 
    // 取りこぼし時だけ値札全体を補助的に読む。
    const tagRes=await worker.recognize(tagGray);
@@ -592,7 +663,7 @@ async function runOcr(file){
    const count=[okNo,okName,okPrice].filter(Boolean).length;
 
    if(count===3){
-     setOcrStatus('v0.6.3：左上の商品番号と右下価格を複数回照合し、商品名は商品説明の長い日本語行を優先しました。3項目を確認してください。','ok');
+     setOcrStatus('v0.6.4：値札の傾きを補正してから、商品番号・価格を専用モードで複数回照合しました。3項目を確認してください。','ok');
    }else if(count>0){
      const miss=[];
      if(!okNo)miss.push('商品番号');
