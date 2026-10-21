@@ -18,7 +18,7 @@ button,input{font:inherit}button{cursor:pointer}.app{max-width:720px;margin:auto
 .preview{width:100%;max-height:260px;object-fit:contain;border-radius:14px;border:1px solid var(--border);background:#fafafa;display:none;margin-top:12px}
 .pricebox{background:var(--accentSoft);border-radius:16px;padding:14px}.onlinebox{background:#fff7ed;border-radius:16px;padding:14px}.goodbox{background:var(--goodSoft);border-radius:16px;padding:14px}.hero{font-size:42px;font-weight:900;color:var(--accent);letter-spacing:-1px}.online{font-size:27px;font-weight:900;color:var(--online)}.saving{font-size:36px;font-weight:900;color:var(--good)}
 .muted{color:var(--muted)}.small{font-size:12px}.note{font-size:12px;color:var(--muted);line-height:1.6;margin:9px 0 0}.hidden{display:none!important}.check{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:14px}.check input{width:20px;height:20px}.qty{display:flex;align-items:center;gap:8px}.qty button{width:42px;height:42px;border-radius:11px;border:1px solid var(--border);background:#fff;font-size:22px}.qty span{min-width:44px;text-align:center;font-weight:900}.summary{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:420px){.summary{grid-template-columns:1fr}}
-.ocrStatus{display:none;margin-top:12px;padding:12px;border-radius:12px;background:#f8fafc;border:1px solid var(--border);font-size:13px;line-height:1.6}.ocrStatus.show{display:block}.ocrStatus.ok{background:#eefbf4;border-color:#b7e4ca;color:#17643b}.ocrStatus.warn{background:#fff8e8;border-color:#f1d28b;color:#76520b}.ocrStatus.error{background:#fff0f0;border-color:#efb7b7;color:#8a2626}.autoField{background:#f2f8ff}.ocrTarget{display:none;margin-top:10px;padding:10px;border-radius:12px;background:#fff;border:1px dashed var(--border)}.ocrTarget.show{display:block}.ocrTarget img{width:100%;max-height:180px;object-fit:contain;border-radius:8px;background:#fafafa}.ocrTarget .small{margin-top:6px}.item{border:1px solid var(--border);border-radius:14px;padding:12px;margin-top:10px}.itemTitle{font-weight:900;line-height:1.45}.itemMeta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:13px;color:var(--muted)}.itemActions{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
+.ocrStatus{display:none;margin-top:12px;padding:12px;border-radius:12px;background:#f8fafc;border:1px solid var(--border);font-size:13px;line-height:1.6}.ocrStatus.show{display:block}.ocrStatus.ok{background:#eefbf4;border-color:#b7e4ca;color:#17643b}.ocrStatus.warn{background:#fff8e8;border-color:#f1d28b;color:#76520b}.ocrStatus.error{background:#fff0f0;border-color:#efb7b7;color:#8a2626}.autoField{background:#f2f8ff}.ocrTarget{display:none;margin-top:10px;padding:10px;border-radius:12px;background:#fff;border:1px dashed var(--border)}.ocrTarget.show{display:block}.ocrTarget img{width:100%;max-height:180px;object-fit:contain;border-radius:8px;background:#fafafa}.ocrTarget .small{margin-top:6px}.ocrDebug{display:none;margin-top:10px;padding:10px;border-radius:12px;background:#f8fafc;border:1px solid var(--border)}.ocrDebug.show{display:block}.ocrDebugGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ocrDebug img{width:100%;height:86px;object-fit:contain;background:#fff;border:1px solid var(--border);border-radius:8px}.ocrDebugText{font-size:11px;line-height:1.5;color:var(--muted);margin-top:7px;word-break:break-all}.item{border:1px solid var(--border);border-radius:14px;padding:12px;margin-top:10px}.itemTitle{font-weight:900;line-height:1.45}.itemMeta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:13px;color:var(--muted)}.itemActions{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
 </style>
 </head>
 <body>
@@ -26,10 +26,10 @@ button,input{font:inherit}button{cursor:pointer}.app{max-width:720px;margin:auto
 <header>
 <h1>コストコ価格比較</h1>
 <p class="lead">値札を撮るだけで商品番号・商品名・店頭価格を自動入力。最後の確認だけ人が行う、API課金なしのスマホ向けWebアプリです。</p>
-<div class="note" style="margin-top:6px">更新版 v0.6.6</div>
+<div class="note" style="margin-top:6px">更新版 v0.6.7</div>
 </header>
 
-<div class="topbar"><div class="row between"><span class="tag">Web MVP v0.6.6 値札OCR</span><button class="btn secondary smallbtn" id="cartTop" type="button">買い物一覧 <span id="topCount">0</span></button></div></div>
+<div class="topbar"><div class="row between"><span class="tag">Web MVP v0.6.7 値札OCR</span><button class="btn secondary smallbtn" id="cartTop" type="button">買い物一覧 <span id="topCount">0</span></button></div></div>
 
 <section id="entry">
 <div class="card">
@@ -47,6 +47,14 @@ button,input{font:inherit}button{cursor:pointer}.app{max-width:720px;margin:auto
 <div id="ocrStatus" class="ocrStatus" aria-live="polite"></div>
 <button id="ocrRetry" class="btn secondary hidden" type="button" style="margin-top:10px">文字読み取りをもう一度試す</button>
 <div id="ocrTarget" class="ocrTarget"><img id="ocrTargetImg" alt="自動検出した値札部分"><div class="small muted">この部分を値札として読み取っています</div></div>
+<div id="ocrDebug" class="ocrDebug">
+  <div class="small" style="font-weight:800">OCR確認用（読み取りに使った範囲）</div>
+  <div class="ocrDebugGrid" style="margin-top:7px">
+    <div><img id="debugItemImg" alt="商品番号の切り出し"><div class="small muted">商品番号</div></div>
+    <div><img id="debugPriceImg" alt="価格の切り出し"><div class="small muted">店頭価格</div></div>
+  </div>
+  <div id="debugCandidates" class="ocrDebugText"></div>
+</div>
 </div>
 
 <div class="card">
@@ -126,7 +134,7 @@ function compare(){
 function qtyText(){ $('qty').textContent=state.qty;const d=(Number($('online').value)-Number($('store').value))*state.qty;$('qtySave').textContent=d>=0?`${state.qty}個なら ${yen(d)} お得です`:`${state.qty}個ならオンラインより ${yen(Math.abs(d))} 高くなります`; }
 function clearEntry(){
  ['no','name','store','online'].forEach(id=>{$(id).value='';$(id).classList.remove('autoField')});$('buy').checked=false;$('qtyWrap').classList.add('hidden');$('compare').classList.add('hidden');state.qty=1;$('qty').textContent='1';$('cameraPhoto').value='';$('libraryPhoto').value='';$('filePhoto').value='';
- if(state.url)URL.revokeObjectURL(state.url);state.url=null;state.lastPhotoFile=null;$('preview').src='';$('preview').style.display='none';$('ocrTarget').classList.remove('show');$('ocrTargetImg').src='';setOcrStatus('', '');
+ if(state.url)URL.revokeObjectURL(state.url);state.url=null;state.lastPhotoFile=null;$('preview').src='';$('preview').style.display='none';$('ocrTarget').classList.remove('show');$('ocrTargetImg').src='';$('ocrDebug').classList.remove('show');$('debugItemImg').src='';$('debugPriceImg').src='';$('debugCandidates').textContent='';setOcrStatus('', '');
 }
 function makeItem(item,index,mode){
  const box=document.createElement('div');box.className='item';
@@ -587,16 +595,26 @@ async function recognizeNumericLine(worker,base,kind){
  }
  const parser=kind==='price'?parsePriceText:parseItemNumberText;
  let value=pickBestNumber(results,parser);
- if(value)return value;
+ if(value)return {value,results};
 
- // 1行OCRで取れなかった場合だけ single-line fallback
  await worker.setParameters({
    tessedit_pageseg_mode:'13',
    tessedit_char_whitelist: kind==='price' ? '0123456789,' : '0123456789',
    preserve_interword_spaces:'0'
  });
  const r=await worker.recognize(base);
- return parser(r.data.text||'');
+ results.push({text:r.data.text||'',confidence:r.data.confidence||0});
+ return {value:parser(r.data.text||''),results};
+}
+function chooseItemCandidate(candidates){
+ const vals=candidates.filter(v=>/^\d{5,8}$/.test(v||''));
+ if(!vals.length)return '';
+ const counts=new Map();
+ vals.forEach(v=>counts.set(v,(counts.get(v)||0)+1));
+ const repeated=[...counts.entries()].filter(([,n])=>n>=2).sort((a,b)=>b[1]-a[1]);
+ if(repeated.length)return repeated[0][0];
+ // 候補が一致しない場合は、欠落しやすい短い候補より情報量の多い候補を優先
+ return vals.sort((a,b)=>b.length-a.length)[0];
 }
 function segmentDigitBoxes(source){
  const c=preprocessCanvas(source,'binary');
@@ -738,14 +756,31 @@ async function runOcr(file){
    // 左上の大きな商品番号「1行」だけを狭く切り出して読む
    const itemRect={x:tag.width*.035,y:tag.height*.018,w:tag.width*.43,h:tag.height*.155};
    const itemBase=cropCanvas(tag,itemRect,1800);
-   let itemNo=await recognizeNumericLine(worker,itemBase,'item');
+   const itemDebugUrl=canvasToPreview(itemBase);
+   if(itemDebugUrl){$('debugItemImg').src=itemDebugUrl;$('ocrDebug').classList.add('show');}
+
+   const itemLine=await recognizeNumericLine(worker,itemBase,'item');
+   let itemNo=itemLine.value||'';
+
+   // 数字限定OCRとは別に、通常の1行OCRでも商品番号を読む
+   await worker.setParameters({
+     tessedit_pageseg_mode:'7',
+     tessedit_char_whitelist:'',
+     preserve_interword_spaces:'0'
+   });
+   const itemGeneralRes=await worker.recognize(itemBase);
+   const itemGeneral=parseItemNumberText(itemGeneralRes.data.text||'');
+
    if(!itemNo)itemNo=await recognizeFontDigits(worker,itemBase,5,8);
 
    setOcrStatus('店頭価格を読み取っています…');
    // 右下の大きな価格「1行」だけを狭く切り出して読む
    const priceRect={x:tag.width*.55,y:tag.height*.50,w:tag.width*.42,h:tag.height*.40};
    const priceBase=cropCanvas(tag,priceRect,2000);
-   let price=await recognizeNumericLine(worker,priceBase,'price');
+   const priceDebugUrl=canvasToPreview(priceBase);
+   if(priceDebugUrl){$('debugPriceImg').src=priceDebugUrl;$('ocrDebug').classList.add('show');}
+   const priceLine=await recognizeNumericLine(worker,priceBase,'price');
+   let price=priceLine.value||'';
    if(!price)price=await recognizeFontDigits(worker,priceBase,3,5);
 
    setOcrStatus('商品名を読み取っています…');
@@ -767,13 +802,17 @@ async function runOcr(file){
    nameResults.sort((a,b)=>b.score-a.score);
    let name=nameResults[0]?.value||'';
 
-   // 取りこぼし時だけ値札全体を補助的に読む。
+   // 値札全体も補助的に読み、商品番号は複数経路の一致を優先する。
    const tagRes=await worker.recognize(tagGray);
    const parsed=parseOcr(tagRes.data.text||'');
-   if(!itemNo)itemNo=parsed.itemNo;
+   itemNo=chooseItemCandidate([itemNo,itemGeneral,parsed.itemNo])||itemNo||itemGeneral||parsed.itemNo;
    if(!name)name=saneName(parsed.name);
-   // 価格は右下領域を最優先。取れなかった時だけ、全体OCRの候補を使う。
+   // 価格は右下領域を最優先。取れなかった時だけ全体OCR候補を使う。
    if(!price && parsed.price && parsed.price!==itemNo)price=parsed.price;
+
+   const itemRaw=[...(itemLine.results||[]).map(r=>parseItemNumberText(r.text||'')),itemGeneral,parsed.itemNo].filter(Boolean);
+   const priceRaw=[...(priceLine.results||[]).map(r=>parsePriceText(r.text||'')),parsed.price].filter(Boolean);
+   $('debugCandidates').textContent='商品番号候補: '+(itemRaw.join(' / ')||'なし')+'　｜　価格候補: '+(priceRaw.join(' / ')||'なし');
 
    try{
      const dict=JSON.parse(localStorage.getItem('costcoProductDict')||'{}');
@@ -786,7 +825,7 @@ async function runOcr(file){
    const count=[okNo,okName,okPrice].filter(Boolean).length;
 
    if(count===3){
-     setOcrStatus('v0.6.6：商品番号と価格は、数字を1文字ずつ読む方式ではなく、値札の大きな数字1行を複数の画像処理で照合する方式を優先しました。','ok');
+     setOcrStatus('v0.6.7：商品番号は「数字限定OCR・通常1行OCR・値札全体OCR」の3経路を照合しました。下に実際の切り出し範囲も表示しています。','ok');
    }else if(count>0){
      const miss=[];
      if(!okNo)miss.push('商品番号');
