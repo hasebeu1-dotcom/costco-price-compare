@@ -26,10 +26,10 @@ button,input{font:inherit}button{cursor:pointer}.app{max-width:720px;margin:auto
 <header>
 <h1>コストコ価格比較</h1>
 <p class="lead">値札を撮るだけで商品番号・商品名・店頭価格を自動入力。最後の確認だけ人が行う、API課金なしのスマホ向けWebアプリです。</p>
-<div class="note" style="margin-top:6px">更新版 v0.6.4</div>
+<div class="note" style="margin-top:6px">更新版 v0.6.5</div>
 </header>
 
-<div class="topbar"><div class="row between"><span class="tag">Web MVP v0.6.4 値札OCR</span><button class="btn secondary smallbtn" id="cartTop" type="button">買い物一覧 <span id="topCount">0</span></button></div></div>
+<div class="topbar"><div class="row between"><span class="tag">Web MVP v0.6.5 値札OCR</span><button class="btn secondary smallbtn" id="cartTop" type="button">買い物一覧 <span id="topCount">0</span></button></div></div>
 
 <section id="entry">
 <div class="card">
@@ -524,14 +524,19 @@ function parseNameRegion(text=''){
  const candidates=[];
  lines.forEach((line,idx)=>{
    if(stop.test(line))return;
-   if((line.match(/\d/g)||[]).length>2)return;
-   const core=line.replace(/[\s・･()（）\-_/.,]/g,'');
-   if(core.length<3||core.length>42)return;
+   const digitCount=(line.match(/\d/g)||[]).length;
+   if(digitCount>2)return;
+   const core=line.replace(/[\s・･()（）\-_/.,%％]/g,'');
+   if(core.length<3||core.length>48)return;
    const good=(core.match(/[A-Za-zぁ-んァ-ヶ一-龠]/g)||[]).length;
-   if(good/core.length<.72)return;
+   if(good/core.length<.68)return;
    const hasJa=/[ぁ-んァ-ヶ一-龠]/.test(line);
-   let score=(hasJa?55:12)-idx*2+Math.min(core.length,30)*2;
-   if(/^[A-Z][A-Z\s&.'-]{2,30}$/.test(line))score-=12;
+   const isLongEnglish=/^[A-Z][A-Z\s&.'()\-0-9%]{7,48}$/.test(line);
+   let score=-idx*2+Math.min(core.length,36)*4;
+   if(hasJa)score+=45;
+   if(isLongEnglish)score+=24;
+   if(core.length<6)score-=45;
+   if(/^[A-Z]\s*[ぁ-んァ-ヶ一-龠]/.test(line))score-=35;
    candidates.push({value:line,score});
  });
  candidates.sort((a,b)=>b.score-a.score);
@@ -551,6 +556,105 @@ function pickBestNumber(results, parser){
  const arr=[...scored.entries()].map(([value,v])=>({value,score:v.score+v.count*25,count:v.count}));
  arr.sort((a,b)=>b.score-a.score);
  return arr[0]?.value||'';
+}
+function segmentDigitBoxes(source){
+ const c=preprocessCanvas(source,'binary');
+ const ctx=c.getContext('2d',{willReadFrequently:true});
+ const {data}=ctx.getImageData(0,0,c.width,c.height),w=c.width,h=c.height;
+ const counts=new Uint32Array(w);
+ for(let x=0;x<w;x++){
+   let n=0;
+   for(let y=0;y<h;y++){
+     const i=(y*w+x)*4;
+     if(data[i]<90)n++;
+   }
+   counts[x]=n;
+ }
+ const minCol=Math.max(2,Math.round(h*.025));
+ const runs=[];let start=-1,gap=0;
+ for(let x=0;x<w;x++){
+   const on=counts[x]>=minCol;
+   if(on){
+     if(start<0)start=x;
+     gap=0;
+   }else if(start>=0){
+     gap++;
+     if(gap>Math.max(2,Math.round(w*.003))){
+       runs.push([start,x-gap]);
+       start=-1;gap=0;
+     }
+   }
+ }
+ if(start>=0)runs.push([start,w-1]);
+
+ const boxes=[];
+ for(const [x0,x1] of runs){
+   let y0=h,y1=-1,pixels=0;
+   for(let x=x0;x<=x1;x++)for(let y=0;y<h;y++){
+     const i=(y*w+x)*4;
+     if(data[i]<90){if(y<y0)y0=y;if(y>y1)y1=y;pixels++;}
+   }
+   if(y1<0)continue;
+   const bw=x1-x0+1,bh=y1-y0+1;
+   if(bh<h*.22||bw<w*.006||pixels<20)continue;
+   boxes.push({x:x0,y:y0,w:bw,h:bh});
+ }
+ if(!boxes.length)return [];
+ const maxH=Math.max(...boxes.map(b=>b.h));
+ return boxes.filter(b=>b.h>=maxH*.62 && b.w<=b.h*1.15).sort((a,b)=>a.x-b.x);
+}
+function countGlyphHoles(source){
+ const c=preprocessCanvas(source,'binary');
+ const ctx=c.getContext('2d',{willReadFrequently:true});
+ const {data}=ctx.getImageData(0,0,c.width,c.height),w=c.width,h=c.height;
+ const white=new Uint8Array(w*h),seen=new Uint8Array(w*h);
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+   const i=(y*w+x)*4;
+   if(data[i]>200)white[y*w+x]=1;
+ }
+ let holes=0;
+ const q=[];
+ for(let sy=0;sy<h;sy++)for(let sx=0;sx<w;sx++){
+   const si=sy*w+sx;
+   if(!white[si]||seen[si])continue;
+   seen[si]=1;q.length=0;q.push(si);
+   let touches=false;
+   for(let qi=0;qi<q.length;qi++){
+     const p=q[qi],x=p%w,y=(p/w)|0;
+     if(x===0||y===0||x===w-1||y===h-1)touches=true;
+     const ns=[p-1,p+1,p-w,p+w];
+     for(const np of ns){
+       if(np<0||np>=w*h)continue;
+       const nx=np%w,ny=(np/w)|0;
+       if(Math.abs(nx-x)+Math.abs(ny-y)!==1)continue;
+       if(white[np]&&!seen[np]){seen[np]=1;q.push(np);}
+     }
+   }
+   if(!touches)holes++;
+ }
+ return holes;
+}
+async function recognizeFontDigits(worker,source,minDigits,maxDigits){
+ const boxes=segmentDigitBoxes(source);
+ if(boxes.length<minDigits||boxes.length>maxDigits)return '';
+ const out=[];
+ await worker.setParameters({
+   tessedit_pageseg_mode:'10',
+   tessedit_char_whitelist:'0123456789',
+   preserve_interword_spaces:'0'
+ });
+ for(const b of boxes){
+   const pad=Math.max(4,Math.round(b.h*.10));
+   const glyph=cropCanvas(source,{x:Math.max(0,b.x-pad),y:Math.max(0,b.y-pad),w:Math.min(source.width-b.x+pad,b.w+pad*2),h:Math.min(source.height-b.y+pad,b.h+pad*2)},420);
+   const g=preprocessCanvas(glyph,'binary');
+   const r=await worker.recognize(g);
+   let ch=(normalizeDigits(r.data.text||'').match(/\d/)||[])[0]||'';
+   const holes=countGlyphHoles(g);
+   if(holes>=2)ch='8';
+   if(!ch)return '';
+   out.push(ch);
+ }
+ return out.join('');
 }
 function saneName(s=''){
  s=cleanLine(s);if(!s)return'';
@@ -605,7 +709,8 @@ async function runOcr(file){
      const r=await worker.recognize(c);
      itemPasses.push({text:r.data.text||'',confidence:r.data.confidence||0});
    }
-   let itemNo=pickBestNumber(itemPasses,parseItemNumberText);
+   let itemNo=await recognizeFontDigits(worker,itemBase,5,8);
+   if(!itemNo)itemNo=pickBestNumber(itemPasses,parseItemNumberText);
 
    setOcrStatus('店頭価格を読み取っています…');
    // Costco値札の右下の大きな数字だけを3通りで読む
@@ -623,7 +728,8 @@ async function runOcr(file){
      const r=await worker.recognize(c);
      pricePasses.push({text:r.data.text||'',confidence:r.data.confidence||0});
    }
-   let price=pickBestNumber(pricePasses,parsePriceText);
+   let price=await recognizeFontDigits(worker,priceBase,3,5);
+   if(!price)price=pickBestNumber(pricePasses,parsePriceText);
 
    setOcrStatus('商品名を読み取っています…');
    // 商品番号の下〜中央左だけを商品名として読む。メーカー名より商品説明の長い日本語行を優先。
@@ -663,7 +769,7 @@ async function runOcr(file){
    const count=[okNo,okName,okPrice].filter(Boolean).length;
 
    if(count===3){
-     setOcrStatus('v0.6.4：値札の傾きを補正してから、商品番号・価格を専用モードで複数回照合しました。3項目を確認してください。','ok');
+     setOcrStatus('v0.6.5：コストコ値札の決まった数字フォントを前提に、数字を1文字ずつ分離して照合しました。3項目を確認してください。','ok');
    }else if(count>0){
      const miss=[];
      if(!okNo)miss.push('商品番号');
