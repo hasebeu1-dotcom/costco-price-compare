@@ -26,10 +26,10 @@ button,input{font:inherit}button{cursor:pointer}.app{max-width:720px;margin:auto
 <header>
 <h1>コストコ価格比較</h1>
 <p class="lead">値札を撮るだけで商品番号・商品名・店頭価格を自動入力。最後の確認だけ人が行う、API課金なしのスマホ向けWebアプリです。</p>
-<div class="note" style="margin-top:6px">更新版 v0.8.0</div>
+<div class="note" style="margin-top:6px">更新版 v0.8.1</div>
 </header>
 
-<div class="topbar"><div class="row between"><span class="tag">Web MVP v0.8.0 値札OCR</span><button class="btn secondary smallbtn" id="cartTop" type="button">買い物一覧 <span id="topCount">0</span></button></div></div>
+<div class="topbar"><div class="row between"><span class="tag">Web MVP v0.8.1 値札OCR</span><button class="btn secondary smallbtn" id="cartTop" type="button">買い物一覧 <span id="topCount">0</span></button></div></div>
 
 <section id="entry">
 <div class="card">
@@ -59,9 +59,10 @@ button,input{font:inherit}button{cursor:pointer}.app{max-width:720px;margin:auto
   <div class="small" style="font-weight:900">自動で読めないときだけ、場所を指定して読み直せます</div>
   <div class="grid2" style="margin-top:8px">
     <button id="pickItemArea" class="btn secondary" type="button">🎯 商品番号を指定</button>
-    <button id="pickPriceArea" class="btn secondary" type="button">🎯 店頭価格を指定</button>
+    <button id="pickNameArea" class="btn secondary" type="button">🎯 商品名を指定</button>
   </div>
-  <div id="manualHint" class="manualHint">ボタンを押したあと、下の値札画像で読みたい数字の中央を1回タップしてください。</div>
+  <button id="pickPriceArea" class="btn secondary" type="button" style="width:100%;margin-top:8px">🎯 店頭価格を指定</button>
+  <div id="manualHint" class="manualHint">ボタンを押したあと、下の値札画像で読みたい部分の中央を1回タップしてください。</div>
   <img id="manualFixImg" class="manualFixImg" alt="読み取り位置を指定する値札画像">
 </div>
 </div>
@@ -1013,7 +1014,7 @@ async function runOcr(file){
    if(manualUrl){$('manualFixImg').src=manualUrl;}
 
    if(count===3){
-     setOcrStatus('v0.8.0：商品番号・価格は英数字専用OCRで読みます。間違った場合は下の「商品番号を指定」「店頭価格を指定」で、その数字をタップして読み直せます。','ok');
+     setOcrStatus('v0.8.1：商品番号・商品名・店頭価格のどれも、間違った場合は下のボタンから場所を指定して1回タップで読み直せます。','ok');
    }else if(count>0){
      const miss=[];
      if(!okNo)miss.push('商品番号');
@@ -1051,8 +1052,8 @@ async function manualReadAt(event){
  if(rx<0||rx>1||ry<0||ry>1)return;
  const tag=state.tagCanvas;
  const kind=state.manualMode;
- const rw=kind==='item'?tag.width*.46:tag.width*.44;
- const rh=kind==='item'?tag.height*.20:tag.height*.28;
+ const rw=kind==='name'?tag.width*.88:(kind==='item'?tag.width*.46:tag.width*.44);
+ const rh=kind==='name'?tag.height*.34:(kind==='item'?tag.height*.20:tag.height*.28);
  const rect={
    x:Math.max(0,rx*tag.width-rw/2),
    y:Math.max(0,ry*tag.height-rh/2),
@@ -1061,18 +1062,51 @@ async function manualReadAt(event){
  };
  const crop=cropCanvas(tag,rect,2000);
  if(kind==='item')$('debugItemImg').src=canvasToPreview(crop);
- else $('debugPriceImg').src=canvasToPreview(crop);
+ else if(kind==='price')$('debugPriceImg').src=canvasToPreview(crop);
  $('ocrDebug').classList.add('show');
- setOcrStatus(kind==='item'?'指定した場所から商品番号を読み直しています…':'指定した場所から価格を読み直しています…');
+ setOcrStatus(
+   kind==='item'?'指定した場所から商品番号を読み直しています…':
+   kind==='name'?'指定した場所から商品名を読み直しています…':
+   '指定した場所から価格を読み直しています…'
+ );
  try{
-   const nw=await getNumericWorker();
-   const rr=await recognizeNumericLine(nw,crop,kind);
-   const value=rr.value||await recognizeFontDigits(nw,crop,kind==='item'?5:3,kind==='item'?8:5);
-   if(value){
-     if(kind==='item')fillAuto('no',value);else fillAuto('store',value);
-     setOcrStatus((kind==='item'?'商品番号':'店頭価格')+'を指定位置から読み直しました。結果だけ確認してください。','ok');
+   if(kind==='name'){
+     const w=await getOcrWorker();
+     const gray=preprocessCanvas(crop,'gray');
+     const candidates=[];
+     for(const [c,psm] of [[gray,'6'],[crop,'11']]){
+       await w.setParameters({
+         tessedit_pageseg_mode:psm,
+         tessedit_char_whitelist:'',
+         preserve_interword_spaces:'1'
+       });
+       const r=await w.recognize(c);
+       const value=parseNameRegion(r.data.text||'');
+       if(value){
+         const hasJa=/[ぁ-んァ-ヶ一-龠]/.test(value);
+         let score=(r.data.confidence||0)+Math.min(50,value.length*2);
+         if(!hasJa)score+=30;
+         candidates.push({value,score});
+       }
+     }
+     candidates.sort((a,b)=>b.score-a.score);
+     const value=candidates[0]?.value||'';
+     if(value){
+       fillAuto('name',value);
+       setOcrStatus('商品名を指定位置から読み直しました。結果だけ確認してください。','ok');
+     }else{
+       setOcrStatus('指定した場所の商品名を読み取れませんでした。商品名の文字列の中央をもう一度タップしてください。','warn');
+     }
    }else{
-     setOcrStatus('指定した場所を読み取れませんでした。数字の中央をもう一度タップしてください。','warn');
+     const nw=await getNumericWorker();
+     const rr=await recognizeNumericLine(nw,crop,kind);
+     const value=rr.value||await recognizeFontDigits(nw,crop,kind==='item'?5:3,kind==='item'?8:5);
+     if(value){
+       if(kind==='item')fillAuto('no',value);else fillAuto('store',value);
+       setOcrStatus((kind==='item'?'商品番号':'店頭価格')+'を指定位置から読み直しました。結果だけ確認してください。','ok');
+     }else{
+       setOcrStatus('指定した場所を読み取れませんでした。読みたい数字の中央をもう一度タップしてください。','warn');
+     }
    }
  }catch(e){
    console.error(e);
@@ -1085,6 +1119,13 @@ $('pickItemArea').addEventListener('click',()=>{
  if(!state.tagCanvas){setOcrStatus('先に値札写真を選んでください。','warn');return;}
  state.manualMode='item';
  $('manualHint').textContent='値札画像の「商品番号」の数字の中央を1回タップしてください。';
+ $('manualFixImg').classList.add('show');
+ $('manualFixImg').scrollIntoView({behavior:'smooth',block:'center'});
+});
+$('pickNameArea').addEventListener('click',()=>{
+ if(!state.tagCanvas){setOcrStatus('先に値札写真を選んでください。','warn');return;}
+ state.manualMode='name';
+ $('manualHint').textContent='値札画像の「商品名」の文字列の中央を1回タップしてください。英字の商品名がある場合は、英字行をタップすると安定しやすいです。';
  $('manualFixImg').classList.add('show');
  $('manualFixImg').scrollIntoView({behavior:'smooth',block:'center'});
 });
