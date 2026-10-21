@@ -18,7 +18,7 @@ button,input{font:inherit}button{cursor:pointer}.app{max-width:720px;margin:auto
 .preview{width:100%;max-height:260px;object-fit:contain;border-radius:14px;border:1px solid var(--border);background:#fafafa;display:none;margin-top:12px}
 .pricebox{background:var(--accentSoft);border-radius:16px;padding:14px}.onlinebox{background:#fff7ed;border-radius:16px;padding:14px}.goodbox{background:var(--goodSoft);border-radius:16px;padding:14px}.hero{font-size:42px;font-weight:900;color:var(--accent);letter-spacing:-1px}.online{font-size:27px;font-weight:900;color:var(--online)}.saving{font-size:36px;font-weight:900;color:var(--good)}
 .muted{color:var(--muted)}.small{font-size:12px}.note{font-size:12px;color:var(--muted);line-height:1.6;margin:9px 0 0}.hidden{display:none!important}.check{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:14px}.check input{width:20px;height:20px}.qty{display:flex;align-items:center;gap:8px}.qty button{width:42px;height:42px;border-radius:11px;border:1px solid var(--border);background:#fff;font-size:22px}.qty span{min-width:44px;text-align:center;font-weight:900}.summary{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:420px){.summary{grid-template-columns:1fr}}
-.ocrStatus{display:none;margin-top:12px;padding:12px;border-radius:12px;background:#f8fafc;border:1px solid var(--border);font-size:13px;line-height:1.6}.ocrStatus.show{display:block}.ocrStatus.ok{background:#eefbf4;border-color:#b7e4ca;color:#17643b}.ocrStatus.warn{background:#fff8e8;border-color:#f1d28b;color:#76520b}.ocrStatus.error{background:#fff0f0;border-color:#efb7b7;color:#8a2626}.autoField{background:#f2f8ff}.ocrTarget{display:none;margin-top:10px;padding:10px;border-radius:12px;background:#fff;border:1px dashed var(--border)}.ocrTarget.show{display:block}.ocrTarget img{width:100%;max-height:180px;object-fit:contain;border-radius:8px;background:#fafafa}.ocrTarget .small{margin-top:6px}.ocrDebug{display:none;margin-top:10px;padding:10px;border-radius:12px;background:#f8fafc;border:1px solid var(--border)}.ocrDebug.show{display:block}.ocrDebugGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ocrDebug img{width:100%;height:86px;object-fit:contain;background:#fff;border:1px solid var(--border);border-radius:8px}.ocrDebugText{font-size:11px;line-height:1.5;color:var(--muted);margin-top:7px;word-break:break-all}.item{border:1px solid var(--border);border-radius:14px;padding:12px;margin-top:10px}.itemTitle{font-weight:900;line-height:1.45}.itemMeta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:13px;color:var(--muted)}.itemActions{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
+.ocrStatus{display:none;margin-top:12px;padding:12px;border-radius:12px;background:#f8fafc;border:1px solid var(--border);font-size:13px;line-height:1.6}.ocrStatus.show{display:block}.ocrStatus.ok{background:#eefbf4;border-color:#b7e4ca;color:#17643b}.ocrStatus.warn{background:#fff8e8;border-color:#f1d28b;color:#76520b}.ocrStatus.error{background:#fff0f0;border-color:#efb7b7;color:#8a2626}.autoField{background:#f2f8ff}.ocrTarget{display:none;margin-top:10px;padding:10px;border-radius:12px;background:#fff;border:1px dashed var(--border)}.ocrTarget.show{display:block}.ocrTarget img{width:100%;max-height:180px;object-fit:contain;border-radius:8px;background:#fafafa}.ocrTarget .small{margin-top:6px}.ocrDebug{display:none;margin-top:10px;padding:10px;border-radius:12px;background:#f8fafc;border:1px solid var(--border)}.ocrDebug.show{display:block}.ocrDebugGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ocrDebug img{width:100%;height:86px;object-fit:contain;background:#fff;border:1px solid var(--border);border-radius:8px}.ocrDebugText{font-size:11px;line-height:1.5;color:var(--muted);margin-top:7px;word-break:break-all}.manualFix{display:none;margin-top:10px;padding:12px;border-radius:12px;background:#fff8e8;border:1px solid #f1d28b}.manualFix.show{display:block}.manualFixImg{display:none;width:100%;height:auto;max-height:none;border-radius:10px;border:2px solid #f1d28b;background:#fff;touch-action:manipulation}.manualFixImg.show{display:block}.manualHint{font-size:12px;line-height:1.55;color:#76520b;margin:8px 0 0}.item{border:1px solid var(--border);border-radius:14px;padding:12px;margin-top:10px}.itemTitle{font-weight:900;line-height:1.45}.itemMeta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:13px;color:var(--muted)}.itemActions{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
 </style>
 </head>
 <body>
@@ -26,10 +26,10 @@ button,input{font:inherit}button{cursor:pointer}.app{max-width:720px;margin:auto
 <header>
 <h1>コストコ価格比較</h1>
 <p class="lead">値札を撮るだけで商品番号・商品名・店頭価格を自動入力。最後の確認だけ人が行う、API課金なしのスマホ向けWebアプリです。</p>
-<div class="note" style="margin-top:6px">更新版 v0.7.0</div>
+<div class="note" style="margin-top:6px">更新版 v0.8.0</div>
 </header>
 
-<div class="topbar"><div class="row between"><span class="tag">Web MVP v0.7.0 値札OCR</span><button class="btn secondary smallbtn" id="cartTop" type="button">買い物一覧 <span id="topCount">0</span></button></div></div>
+<div class="topbar"><div class="row between"><span class="tag">Web MVP v0.8.0 値札OCR</span><button class="btn secondary smallbtn" id="cartTop" type="button">買い物一覧 <span id="topCount">0</span></button></div></div>
 
 <section id="entry">
 <div class="card">
@@ -54,6 +54,15 @@ button,input{font:inherit}button{cursor:pointer}.app{max-width:720px;margin:auto
     <div><img id="debugPriceImg" alt="価格の切り出し"><div class="small muted">店頭価格</div></div>
   </div>
   <div id="debugCandidates" class="ocrDebugText"></div>
+</div>
+<div id="manualFix" class="manualFix">
+  <div class="small" style="font-weight:900">自動で読めないときだけ、場所を指定して読み直せます</div>
+  <div class="grid2" style="margin-top:8px">
+    <button id="pickItemArea" class="btn secondary" type="button">🎯 商品番号を指定</button>
+    <button id="pickPriceArea" class="btn secondary" type="button">🎯 店頭価格を指定</button>
+  </div>
+  <div id="manualHint" class="manualHint">ボタンを押したあと、下の値札画像で読みたい数字の中央を1回タップしてください。</div>
+  <img id="manualFixImg" class="manualFixImg" alt="読み取り位置を指定する値札画像">
 </div>
 </div>
 
@@ -116,7 +125,7 @@ button,input{font:inherit}button{cursor:pointer}.app{max-width:720px;margin:auto
 <script>
 (()=>{
 const $=id=>document.getElementById(id), yen=n=>`${Math.round(Number(n)||0).toLocaleString('ja-JP')}円`;
-const state={cart:JSON.parse(localStorage.getItem('costcoCompareCart')||'[]'),qty:1,url:null,lastPhotoFile:null};
+const state={cart:JSON.parse(localStorage.getItem('costcoCompareCart')||'[]'),qty:1,url:null,lastPhotoFile:null,tagCanvas:null,manualMode:null};
 const screens=[$('entry'),$('cart'),$('result')];
 function show(el){screens.forEach(x=>x.classList.add('hidden'));el.classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'})}
 function save(){localStorage.setItem('costcoCompareCart',JSON.stringify(state.cart))}
@@ -134,7 +143,7 @@ function compare(){
 function qtyText(){ $('qty').textContent=state.qty;const d=(Number($('online').value)-Number($('store').value))*state.qty;$('qtySave').textContent=d>=0?`${state.qty}個なら ${yen(d)} お得です`:`${state.qty}個ならオンラインより ${yen(Math.abs(d))} 高くなります`; }
 function clearEntry(){
  ['no','name','store','online'].forEach(id=>{$(id).value='';$(id).classList.remove('autoField')});$('buy').checked=false;$('qtyWrap').classList.add('hidden');$('compare').classList.add('hidden');state.qty=1;$('qty').textContent='1';$('cameraPhoto').value='';$('libraryPhoto').value='';$('filePhoto').value='';
- if(state.url)URL.revokeObjectURL(state.url);state.url=null;state.lastPhotoFile=null;$('preview').src='';$('preview').style.display='none';$('ocrTarget').classList.remove('show');$('ocrTargetImg').src='';$('ocrDebug').classList.remove('show');$('debugItemImg').src='';$('debugPriceImg').src='';$('debugCandidates').textContent='';setOcrStatus('', '');
+ if(state.url)URL.revokeObjectURL(state.url);state.url=null;state.lastPhotoFile=null;state.tagCanvas=null;state.manualMode=null;$('preview').src='';$('preview').style.display='none';$('ocrTarget').classList.remove('show');$('ocrTargetImg').src='';$('ocrDebug').classList.remove('show');$('debugItemImg').src='';$('debugPriceImg').src='';$('debugCandidates').textContent='';$('manualFix').classList.remove('show');$('manualFixImg').classList.remove('show');$('manualFixImg').src='';setOcrStatus('', '');
 }
 function makeItem(item,index,mode){
  const box=document.createElement('div');box.className='item';
@@ -155,6 +164,7 @@ function renderResult(){
 }
 
 let ocrWorker=null;
+let ocrNumericWorker=null;
 function setOcrStatus(message,type=''){
  const el=$('ocrStatus');
  el.textContent=message;
@@ -511,6 +521,34 @@ async function getOcrWorker(){
    user_defined_dpi:'300'
  });
  return ocrWorker;
+}
+async function getNumericWorker(){
+ if(ocrNumericWorker) return ocrNumericWorker;
+ await loadTesseract();
+ const logger=m=>{
+   if(m.status==='loading language traineddata'){
+     setOcrStatus('数字OCRを準備しています…');
+   }else if(m.status==='recognizing text'){
+     setOcrStatus(`数字を解析中… ${Math.round((m.progress||0)*100)}%`);
+   }
+ };
+ const OEM=(window.Tesseract.OEM&&window.Tesseract.OEM.LSTM_ONLY)||1;
+ try{
+   ocrNumericWorker=await window.Tesseract.createWorker('eng',OEM,{
+     logger,
+     workerPath:'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
+     corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1'
+   });
+ }catch(e){
+   console.warn('Numeric OCR worker init failed. Retrying default.',e);
+   ocrNumericWorker=await window.Tesseract.createWorker('eng',OEM,{logger});
+ }
+ await ocrNumericWorker.setParameters({
+   tessedit_pageseg_mode:'7',
+   preserve_interword_spaces:'0',
+   user_defined_dpi:'300'
+ });
+ return ocrNumericWorker;
 }
 function parseItemNumberText(text=''){
  const ms=normalizeDigits(text).match(/\d{5,8}/g)||[];
@@ -873,6 +911,7 @@ async function runOcr(file){
  ['no','name','store'].forEach(id=>{$(id).value='';$(id).classList.remove('autoField')});
  try{
    const worker=await getOcrWorker();
+   const numWorker=await getNumericWorker();
    const full=await makeOcrImage(file);
 
    let label=findBrightLabelRect(full);
@@ -882,6 +921,7 @@ async function runOcr(file){
 
    let tag=cropCanvas(full,label,1900);
    tag=deskewTag(tag);
+   state.tagCanvas=tag;
    const tagGray=preprocessCanvas(tag,'gray');
    const previewUrl=canvasToPreview(tag);
    if(previewUrl){
@@ -897,7 +937,7 @@ async function runOcr(file){
    if(itemDebugUrl){$('debugItemImg').src=itemDebugUrl;$('ocrDebug').classList.add('show');}
 
    const itemFont=recognizeCostcoDigitsByFont(itemBase,5,8);
-   const itemLine=await recognizeNumericLine(worker,itemBase,'item');
+   const itemLine=await recognizeNumericLine(numWorker,itemBase,'item');
    let itemNo=itemFont.value||itemLine.value||'';
 
    // 数字限定OCRとは別に、通常の1行OCRでも商品番号を読む
@@ -906,10 +946,10 @@ async function runOcr(file){
      tessedit_char_whitelist:'',
      preserve_interword_spaces:'0'
    });
-   const itemGeneralRes=await worker.recognize(itemBase);
+   const itemGeneralRes=await numWorker.recognize(itemBase);
    const itemGeneral=parseItemNumberText(itemGeneralRes.data.text||'');
 
-   if(!itemNo)itemNo=await recognizeFontDigits(worker,itemBase,5,8);
+   if(!itemNo)itemNo=await recognizeFontDigits(numWorker,itemBase,5,8);
 
    setOcrStatus('店頭価格を読み取っています…');
    // 右下領域から「最も大きい文字行」を自動検出。
@@ -918,9 +958,9 @@ async function runOcr(file){
    const priceDebugUrl=canvasToPreview(priceBase);
    if(priceDebugUrl){$('debugPriceImg').src=priceDebugUrl;$('ocrDebug').classList.add('show');}
    const priceFont=recognizeCostcoDigitsByFont(priceBase,3,5);
-   const priceLine=await recognizeNumericLine(worker,priceBase,'price');
+   const priceLine=await recognizeNumericLine(numWorker,priceBase,'price');
    let price=priceFont.value||priceLine.value||'';
-   if(!price)price=await recognizeFontDigits(worker,priceBase,3,5);
+   if(!price)price=await recognizeFontDigits(numWorker,priceBase,3,5);
 
    setOcrStatus('商品名を読み取っています…');
    // 商品番号の下〜中央左だけを商品名として読む。メーカー名より商品説明の長い日本語行を優先。
@@ -936,7 +976,12 @@ async function runOcr(file){
      });
      const r=await worker.recognize(c);
      const value=parseNameRegion(r.data.text||'');
-     if(value)nameResults.push({value,score:(r.data.confidence||0)+Math.min(40,value.length*2)+( /[ぁ-んァ-ヶ一-龠]/.test(value)?30:0)});
+     if(value){
+       const hasJapanese=/[ぁ-んァ-ヶ一-龠]/.test(value);
+       if(!hasJapanese || (r.data.confidence||0)>=78){
+         nameResults.push({value,score:(r.data.confidence||0)+Math.min(40,value.length*2)+(hasJapanese?10:35)});
+       }
+     }
    }
    nameResults.sort((a,b)=>b.score-a.score);
    let name=nameResults[0]?.value||'';
@@ -963,8 +1008,12 @@ async function runOcr(file){
    const okPrice=fillAuto('store',price);
    const count=[okNo,okName,okPrice].filter(Boolean).length;
 
+   $('manualFix').classList.add('show');
+   const manualUrl=canvasToPreview(tag);
+   if(manualUrl){$('manualFixImg').src=manualUrl;}
+
    if(count===3){
-     setOcrStatus('v0.7.0：商品番号と価格は固定座標ではなく、値札内の大きな文字行を自動検出して読みます。商品名は英字を優先し、壊れた日本語は自動入力しません。','ok');
+     setOcrStatus('v0.8.0：商品番号・価格は英数字専用OCRで読みます。間違った場合は下の「商品番号を指定」「店頭価格を指定」で、その数字をタップして読み直せます。','ok');
    }else if(count>0){
      const miss=[];
      if(!okNo)miss.push('商品番号');
@@ -995,12 +1044,66 @@ function showPhoto(input){
  preview.style.display='block';
  setOcrStatus('写真を読み込んでいます…');
 }
+async function manualReadAt(event){
+ if(!state.tagCanvas||!state.manualMode)return;
+ const img=$('manualFixImg'),r=img.getBoundingClientRect();
+ const rx=(event.clientX-r.left)/r.width,ry=(event.clientY-r.top)/r.height;
+ if(rx<0||rx>1||ry<0||ry>1)return;
+ const tag=state.tagCanvas;
+ const kind=state.manualMode;
+ const rw=kind==='item'?tag.width*.46:tag.width*.44;
+ const rh=kind==='item'?tag.height*.20:tag.height*.28;
+ const rect={
+   x:Math.max(0,rx*tag.width-rw/2),
+   y:Math.max(0,ry*tag.height-rh/2),
+   w:Math.min(rw,tag.width),
+   h:Math.min(rh,tag.height)
+ };
+ const crop=cropCanvas(tag,rect,2000);
+ if(kind==='item')$('debugItemImg').src=canvasToPreview(crop);
+ else $('debugPriceImg').src=canvasToPreview(crop);
+ $('ocrDebug').classList.add('show');
+ setOcrStatus(kind==='item'?'指定した場所から商品番号を読み直しています…':'指定した場所から価格を読み直しています…');
+ try{
+   const nw=await getNumericWorker();
+   const rr=await recognizeNumericLine(nw,crop,kind);
+   const value=rr.value||await recognizeFontDigits(nw,crop,kind==='item'?5:3,kind==='item'?8:5);
+   if(value){
+     if(kind==='item')fillAuto('no',value);else fillAuto('store',value);
+     setOcrStatus((kind==='item'?'商品番号':'店頭価格')+'を指定位置から読み直しました。結果だけ確認してください。','ok');
+   }else{
+     setOcrStatus('指定した場所を読み取れませんでした。数字の中央をもう一度タップしてください。','warn');
+   }
+ }catch(e){
+   console.error(e);
+   setOcrStatus('指定位置の読み直しでエラーが起きました。もう一度タップしてください。','error');
+ }
+ state.manualMode=null;
+ $('manualFixImg').classList.remove('show');
+}
+$('pickItemArea').addEventListener('click',()=>{
+ if(!state.tagCanvas){setOcrStatus('先に値札写真を選んでください。','warn');return;}
+ state.manualMode='item';
+ $('manualHint').textContent='値札画像の「商品番号」の数字の中央を1回タップしてください。';
+ $('manualFixImg').classList.add('show');
+ $('manualFixImg').scrollIntoView({behavior:'smooth',block:'center'});
+});
+$('pickPriceArea').addEventListener('click',()=>{
+ if(!state.tagCanvas){setOcrStatus('先に値札写真を選んでください。','warn');return;}
+ state.manualMode='price';
+ $('manualHint').textContent='値札画像の「店頭価格」の数字の中央を1回タップしてください。';
+ $('manualFixImg').classList.add('show');
+ $('manualFixImg').scrollIntoView({behavior:'smooth',block:'center'});
+});
+$('manualFixImg').addEventListener('click',manualReadAt);
+
 $('cameraPhoto').addEventListener('change',()=>showPhoto($('cameraPhoto')));
 $('libraryPhoto').addEventListener('change',()=>showPhoto($('libraryPhoto')));
 $('filePhoto').addEventListener('change',()=>showPhoto($('filePhoto')));
 $('ocrRetry').addEventListener('click',()=>{
  if(!state.lastPhotoFile){setOcrStatus('写真をもう一度選んでください。','error');return;}
  ocrWorker=null;
+ ocrNumericWorker=null;
  tesseractLoadPromise=null;
  runOcr(state.lastPhotoFile);
 });
