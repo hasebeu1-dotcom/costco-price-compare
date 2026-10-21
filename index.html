@@ -26,10 +26,10 @@ button,input{font:inherit}button{cursor:pointer}.app{max-width:720px;margin:auto
 <header>
 <h1>コストコ価格比較</h1>
 <p class="lead">値札を撮るだけで商品番号・商品名・店頭価格を自動入力。最後の確認だけ人が行う、API課金なしのスマホ向けWebアプリです。</p>
-<div class="note" style="margin-top:6px">更新版 v0.6.1</div>
+<div class="note" style="margin-top:6px">更新版 v0.6.2</div>
 </header>
 
-<div class="topbar"><div class="row between"><span class="tag">Web MVP v0.6.1 値札OCR</span><button class="btn secondary smallbtn" id="cartTop" type="button">買い物一覧 <span id="topCount">0</span></button></div></div>
+<div class="topbar"><div class="row between"><span class="tag">Web MVP v0.6.2 値札OCR</span><button class="btn secondary smallbtn" id="cartTop" type="button">買い物一覧 <span id="topCount">0</span></button></div></div>
 
 <section id="entry">
 <div class="card">
@@ -455,6 +455,26 @@ function parsePriceText(text=''){
  if(!ms.length)return'';
  return String(ms.sort((a,b)=>b-a)[0]);
 }
+function parseNameRegion(text=''){
+ const lines=normalizeDigits(text).split(/\r?\n/).map(cleanLine).filter(Boolean);
+ const stop=/100\s*(g|ｇ|グラム)|kg|ｋｇ|lb|ＬＢ|税込|税抜|あたり|¥|￥|円|ITEM|品番|商品番号|PRICE/i;
+ const candidates=[];
+ lines.forEach((line,idx)=>{
+   if(stop.test(line))return;
+   if((line.match(/\d/g)||[]).length>2)return;
+   const core=line.replace(/[\s・･()（）\-_/.,]/g,'');
+   if(core.length<3||core.length>36)return;
+   const good=(core.match(/[A-Za-zぁ-んァ-ヶ一-龠]/g)||[]).length;
+   if(good/core.length<.72)return;
+   let score=30-idx;
+   if(/[ぁ-んァ-ヶ一-龠]/.test(line))score+=35;
+   if(/^[A-Z][A-Z\s&.'-]{2,30}$/.test(line))score-=8;
+   if(line.length>=4&&line.length<=24)score+=8;
+   candidates.push({value:line,score});
+ });
+ candidates.sort((a,b)=>b.score-a.score);
+ return candidates[0]?.value||'';
+}
 function saneName(s=''){
  s=cleanLine(s);if(!s)return'';
  const core=s.replace(/[\s・･()（）\-_/.,]/g,'');
@@ -492,7 +512,8 @@ async function runOcr(file){
    }
 
    setOcrStatus('商品番号を読み取っています…');
-   const itemRect={x:0,y:0,w:tag.width*.68,h:tag.height*.36};
+   // Costco値札の左上だけを商品番号として読む
+   const itemRect={x:tag.width*.015,y:tag.height*.01,w:tag.width*.50,h:tag.height*.24};
    const itemCrop=preprocessCanvas(cropCanvas(tag,itemRect,1500),'binary');
    await worker.setParameters({
      tessedit_pageseg_mode:'6',
@@ -503,8 +524,9 @@ async function runOcr(file){
    let itemNo=parseItemNumberText(itemRes.data.text||'');
 
    setOcrStatus('店頭価格を読み取っています…');
-   const priceRect={x:tag.width*.45,y:tag.height*.38,w:tag.width*.55,h:tag.height*.62};
-   const priceCrop=preprocessCanvas(cropCanvas(tag,priceRect,1700),'binary');
+   // Costco値札の右下だけを価格として読む
+   const priceRect={x:tag.width*.53,y:tag.height*.47,w:tag.width*.46,h:tag.height*.50};
+   const priceCrop=preprocessCanvas(cropCanvas(tag,priceRect,1800),'binary');
    await worker.setParameters({
      tessedit_pageseg_mode:'6',
      tessedit_char_whitelist:'0123456789,',
@@ -514,16 +536,22 @@ async function runOcr(file){
    let price=parsePriceText(priceRes.data.text||'');
 
    setOcrStatus('商品名を読み取っています…');
+   // 商品番号の下〜中央左だけを商品名として読む
+   const nameRect={x:tag.width*.015,y:tag.height*.12,w:tag.width*.72,h:tag.height*.46};
+   const nameCrop=preprocessCanvas(cropCanvas(tag,nameRect,1800),'gray');
    await worker.setParameters({
      tessedit_pageseg_mode:'6',
      tessedit_char_whitelist:'',
      preserve_interword_spaces:'1'
    });
+   const nameRes=await worker.recognize(nameCrop);
+   let name=parseNameRegion(nameRes.data.text||'');
+
+   // 取りこぼし時だけ値札全体を補助的に読む。価格は全体OCRから補完しない。
    const tagRes=await worker.recognize(tagGray);
    const parsed=parseOcr(tagRes.data.text||'');
    if(!itemNo)itemNo=parsed.itemNo;
-   if(!price)price=parsed.price;
-   let name=saneName(parsed.name);
+   if(!name)name=saneName(parsed.name);
 
    try{
      const dict=JSON.parse(localStorage.getItem('costcoProductDict')||'{}');
@@ -536,7 +564,7 @@ async function runOcr(file){
    const count=[okNo,okName,okPrice].filter(Boolean).length;
 
    if(count===3){
-     setOcrStatus('値札部分だけを読み取り、自動入力しました。3項目を確認してください。','ok');
+     setOcrStatus('左上＝商品番号、中央左＝商品名、右下＝店頭価格として読み取りました。3項目を確認してください。','ok');
    }else if(count>0){
      const miss=[];
      if(!okNo)miss.push('商品番号');
