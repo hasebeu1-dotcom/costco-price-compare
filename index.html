@@ -26,10 +26,10 @@ button,input{font:inherit}button{cursor:pointer}.app{max-width:720px;margin:auto
 <header>
 <h1>コストコ価格比較</h1>
 <p class="lead">値札を撮るだけで商品番号・商品名・店頭価格を自動入力。最後の確認だけ人が行う、API課金なしのスマホ向けWebアプリです。</p>
-<div class="note" style="margin-top:6px">更新版 v0.6.5</div>
+<div class="note" style="margin-top:6px">更新版 v0.6.6</div>
 </header>
 
-<div class="topbar"><div class="row between"><span class="tag">Web MVP v0.6.5 値札OCR</span><button class="btn secondary smallbtn" id="cartTop" type="button">買い物一覧 <span id="topCount">0</span></button></div></div>
+<div class="topbar"><div class="row between"><span class="tag">Web MVP v0.6.6 値札OCR</span><button class="btn secondary smallbtn" id="cartTop" type="button">買い物一覧 <span id="topCount">0</span></button></div></div>
 
 <section id="entry">
 <div class="card">
@@ -553,9 +553,50 @@ function pickBestNumber(results, parser){
    prev.count+=1;
    scored.set(value,prev);
  });
- const arr=[...scored.entries()].map(([value,v])=>({value,score:v.score+v.count*25,count:v.count}));
+ const arr=[...scored.entries()].map(([value,v])=>({value,score:v.score+v.count*28,count:v.count}));
  arr.sort((a,b)=>b.score-a.score);
  return arr[0]?.value||'';
+}
+function preprocessThreshold(source,threshold){
+ const c=cloneCanvas(source),ctx=c.getContext('2d',{willReadFrequently:true});
+ const img=ctx.getImageData(0,0,c.width,c.height),d=img.data;
+ for(let i=0;i<d.length;i+=4){
+   const g=.299*d[i]+.587*d[i+1]+.114*d[i+2];
+   const v=g>threshold?255:0;
+   d[i]=d[i+1]=d[i+2]=v;
+ }
+ ctx.putImageData(img,0,0);
+ return c;
+}
+async function recognizeNumericLine(worker,base,kind){
+ const variants=[
+   base,
+   preprocessCanvas(base,'gray'),
+   preprocessCanvas(base,'binary'),
+   preprocessThreshold(base,185)
+ ];
+ const results=[];
+ for(const c of variants){
+   await worker.setParameters({
+     tessedit_pageseg_mode:'7',
+     tessedit_char_whitelist: kind==='price' ? '0123456789,' : '0123456789',
+     preserve_interword_spaces:'0'
+   });
+   const r=await worker.recognize(c);
+   results.push({text:r.data.text||'',confidence:r.data.confidence||0});
+ }
+ const parser=kind==='price'?parsePriceText:parseItemNumberText;
+ let value=pickBestNumber(results,parser);
+ if(value)return value;
+
+ // 1行OCRで取れなかった場合だけ single-line fallback
+ await worker.setParameters({
+   tessedit_pageseg_mode:'13',
+   tessedit_char_whitelist: kind==='price' ? '0123456789,' : '0123456789',
+   preserve_interword_spaces:'0'
+ });
+ const r=await worker.recognize(base);
+ return parser(r.data.text||'');
 }
 function segmentDigitBoxes(source){
  const c=preprocessCanvas(source,'binary');
@@ -694,42 +735,18 @@ async function runOcr(file){
    }
 
    setOcrStatus('商品番号を読み取っています…');
-   // Costco値札の左上だけを、原画像・グレー・二値化の3通りで読む
-   const itemRect={x:tag.width*.01,y:tag.height*.005,w:tag.width*.52,h:tag.height*.19};
-   const itemBase=cropCanvas(tag,itemRect,1700);
-   const itemGray=preprocessCanvas(itemBase,'gray');
-   const itemBinary=preprocessCanvas(itemBase,'binary');
-   const itemPasses=[];
-   for(const [c,psm] of [[itemGray,'6'],[itemBinary,'6'],[itemBase,'7']]){
-     await worker.setParameters({
-       tessedit_pageseg_mode:psm,
-       tessedit_char_whitelist:'0123456789',
-       preserve_interword_spaces:'1'
-     });
-     const r=await worker.recognize(c);
-     itemPasses.push({text:r.data.text||'',confidence:r.data.confidence||0});
-   }
-   let itemNo=await recognizeFontDigits(worker,itemBase,5,8);
-   if(!itemNo)itemNo=pickBestNumber(itemPasses,parseItemNumberText);
+   // 左上の大きな商品番号「1行」だけを狭く切り出して読む
+   const itemRect={x:tag.width*.035,y:tag.height*.018,w:tag.width*.43,h:tag.height*.155};
+   const itemBase=cropCanvas(tag,itemRect,1800);
+   let itemNo=await recognizeNumericLine(worker,itemBase,'item');
+   if(!itemNo)itemNo=await recognizeFontDigits(worker,itemBase,5,8);
 
    setOcrStatus('店頭価格を読み取っています…');
-   // Costco値札の右下の大きな数字だけを3通りで読む
-   const priceRect={x:tag.width*.49,y:tag.height*.43,w:tag.width*.50,h:tag.height*.50};
-   const priceBase=cropCanvas(tag,priceRect,1900);
-   const priceGray=preprocessCanvas(priceBase,'gray');
-   const priceBinary=preprocessCanvas(priceBase,'binary');
-   const pricePasses=[];
-   for(const [c,psm] of [[priceBase,'13'],[priceBinary,'13'],[priceGray,'6']]){
-     await worker.setParameters({
-       tessedit_pageseg_mode:psm,
-       tessedit_char_whitelist:'0123456789,',
-       preserve_interword_spaces:'1'
-     });
-     const r=await worker.recognize(c);
-     pricePasses.push({text:r.data.text||'',confidence:r.data.confidence||0});
-   }
-   let price=await recognizeFontDigits(worker,priceBase,3,5);
-   if(!price)price=pickBestNumber(pricePasses,parsePriceText);
+   // 右下の大きな価格「1行」だけを狭く切り出して読む
+   const priceRect={x:tag.width*.55,y:tag.height*.50,w:tag.width*.42,h:tag.height*.40};
+   const priceBase=cropCanvas(tag,priceRect,2000);
+   let price=await recognizeNumericLine(worker,priceBase,'price');
+   if(!price)price=await recognizeFontDigits(worker,priceBase,3,5);
 
    setOcrStatus('商品名を読み取っています…');
    // 商品番号の下〜中央左だけを商品名として読む。メーカー名より商品説明の長い日本語行を優先。
@@ -769,7 +786,7 @@ async function runOcr(file){
    const count=[okNo,okName,okPrice].filter(Boolean).length;
 
    if(count===3){
-     setOcrStatus('v0.6.5：コストコ値札の決まった数字フォントを前提に、数字を1文字ずつ分離して照合しました。3項目を確認してください。','ok');
+     setOcrStatus('v0.6.6：商品番号と価格は、数字を1文字ずつ読む方式ではなく、値札の大きな数字1行を複数の画像処理で照合する方式を優先しました。','ok');
    }else if(count>0){
      const miss=[];
      if(!okNo)miss.push('商品番号');
