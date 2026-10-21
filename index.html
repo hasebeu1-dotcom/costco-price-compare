@@ -26,10 +26,10 @@ button,input{font:inherit}button{cursor:pointer}.app{max-width:720px;margin:auto
 <header>
 <h1>コストコ価格比較</h1>
 <p class="lead">値札を撮るだけで商品番号・商品名・店頭価格を自動入力。最後の確認だけ人が行う、API課金なしのスマホ向けWebアプリです。</p>
-<div class="note" style="margin-top:6px">更新版 v0.6.8</div>
+<div class="note" style="margin-top:6px">更新版 v0.7.0</div>
 </header>
 
-<div class="topbar"><div class="row between"><span class="tag">Web MVP v0.6.8 値札OCR</span><button class="btn secondary smallbtn" id="cartTop" type="button">買い物一覧 <span id="topCount">0</span></button></div></div>
+<div class="topbar"><div class="row between"><span class="tag">Web MVP v0.7.0 値札OCR</span><button class="btn secondary smallbtn" id="cartTop" type="button">買い物一覧 <span id="topCount">0</span></button></div></div>
 
 <section id="entry">
 <div class="card">
@@ -491,8 +491,7 @@ async function getOcrWorker(){
    ocrWorker=await window.Tesseract.createWorker(['jpn','eng'],OEM,{
      logger,
      workerPath:'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
-     corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1',
-     langPath:'https://tessdata.projectnaptha.com/4.0.0'
+     corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1'
    });
  }catch(firstError){
    console.warn('Primary OCR worker init failed. Retrying with default paths.',firstError);
@@ -529,26 +528,37 @@ function parsePriceText(text=''){
 function parseNameRegion(text=''){
  const lines=normalizeDigits(text).split(/\r?\n/).map(cleanLine).filter(Boolean);
  const stop=/100\s*(g|ｇ|グラム)|kg|ｋｇ|lb|ＬＢ|税込|税抜|あたり|¥|￥|円|ITEM|品番|商品番号|PRICE/i;
- const candidates=[];
+ const english=[],japanese=[];
+ const brandOnly=/^(KIRKLAND SIGNATURE|STARBUCKS|KRAFT|MEIJI|INABA|KS)$/i;
+ const suspicious=/[①-⑳⓪-⓿㊀-㊿◎◉●○◯]/;
  lines.forEach((line,idx)=>{
    if(stop.test(line))return;
    const digitCount=(line.match(/\d/g)||[]).length;
-   if(digitCount>2)return;
+   if(digitCount>3)return;
    const core=line.replace(/[\s・･()（）\-_/.,%％]/g,'');
-   if(core.length<3||core.length>48)return;
-   const good=(core.match(/[A-Za-zぁ-んァ-ヶ一-龠]/g)||[]).length;
-   if(good/core.length<.68)return;
-   const hasJa=/[ぁ-んァ-ヶ一-龠]/.test(line);
-   const isLongEnglish=/^[A-Z][A-Z\s&.'()\-0-9%]{7,48}$/.test(line);
-   let score=-idx*2+Math.min(core.length,36)*4;
-   if(hasJa)score+=45;
-   if(isLongEnglish)score+=24;
-   if(core.length<6)score-=45;
-   if(/^[A-Z]\s*[ぁ-んァ-ヶ一-龠]/.test(line))score-=35;
-   candidates.push({value:line,score});
+   if(core.length<3||core.length>56)return;
+
+   const isEnglish=/^[A-Za-z0-9][A-Za-z0-9\s&.'()\-/%]{4,60}$/.test(line);
+   if(isEnglish){
+     let score=Math.min(core.length,44)*4-idx*2;
+     if(/[A-Z]{3,}/.test(line))score+=20;
+     if(brandOnly.test(line.trim()))score-=90;
+     english.push({value:line,score});
+     return;
+   }
+
+   if(suspicious.test(line))return;
+   const jpChars=(core.match(/[ぁ-んァ-ヶ一-龠]/g)||[]).length;
+   const kana=(core.match(/[ぁ-んァ-ヶ]/g)||[]).length;
+   if(jpChars/core.length<.72)return;
+   // 漢字だけの壊れた文字列を自動入力しない。かなが含まれる日本語を優先。
+   if(kana<2)return;
+   let score=Math.min(core.length,36)*3-idx*2+kana*5;
+   japanese.push({value:line,score});
  });
- candidates.sort((a,b)=>b.score-a.score);
- return candidates[0]?.value||'';
+ english.sort((a,b)=>b.score-a.score);
+ japanese.sort((a,b)=>b.score-a.score);
+ return english[0]?.value||japanese[0]?.value||'';
 }
 function pickBestNumber(results, parser){
  const scored=new Map();
@@ -575,6 +585,65 @@ function preprocessThreshold(source,threshold){
  }
  ctx.putImageData(img,0,0);
  return c;
+}
+function locateLargestTextLine(source,rect,kind){
+ const search=cropCanvas(source,rect,1700);
+ const ctx=search.getContext('2d',{willReadFrequently:true});
+ const {data}=ctx.getImageData(0,0,search.width,search.height);
+ const w=search.width,h=search.height;
+ const row=new Uint32Array(h);
+ for(let y=0;y<h;y++){
+   let n=0;
+   for(let x=0;x<w;x++){
+     const i=(y*w+x)*4;
+     const g=.299*data[i]+.587*data[i+1]+.114*data[i+2];
+     if(g<145)n++;
+   }
+   row[y]=n;
+ }
+ const sm=new Float64Array(h),radius=Math.max(2,Math.round(h*.008));
+ for(let y=0;y<h;y++){
+   let sum=0,c=0;
+   for(let k=Math.max(0,y-radius);k<=Math.min(h-1,y+radius);k++){sum+=row[k];c++;}
+   sm[y]=sum/c;
+ }
+ const on=Math.max(3,w*.004);
+ const bands=[];let start=-1;
+ for(let y=0;y<h;y++){
+   if(sm[y]>on){
+     if(start<0)start=y;
+   }else if(start>=0){
+     if(y-start>=Math.max(5,h*.018))bands.push([start,y-1]);
+     start=-1;
+   }
+ }
+ if(start>=0)bands.push([start,h-1]);
+
+ let best=null;
+ for(const [y0,y1] of bands){
+   let x0=w,x1=-1,ink=0;
+   for(let y=y0;y<=y1;y++)for(let x=0;x<w;x++){
+     const i=(y*w+x)*4;
+     const g=.299*data[i]+.587*data[i+1]+.114*data[i+2];
+     if(g<145){if(x<x0)x0=x;if(x>x1)x1=x;ink++;}
+   }
+   if(x1<0)continue;
+   const bh=y1-y0+1,bw=x1-x0+1,coverage=bw/w;
+   // 値札枠などの長い細線は除外
+   if(coverage>.82 && bh<h*.08)continue;
+   const posBonus=kind==='item' ? (1-y0/h)*35 : (y1/h)*35;
+   const score=bh*5 + (ink/Math.max(1,bw))*0.6 + posBonus;
+   if(!best||score>best.score)best={x0,x1,y0,y1,score};
+ }
+ if(!best)return search;
+ const py=Math.max(4,Math.round((best.y1-best.y0+1)*.22));
+ const px=Math.max(6,Math.round((best.x1-best.x0+1)*.08));
+ return cropCanvas(search,{
+   x:Math.max(0,best.x0-px),
+   y:Math.max(0,best.y0-py),
+   w:Math.min(w-Math.max(0,best.x0-px),best.x1-best.x0+1+px*2),
+   h:Math.min(h-Math.max(0,best.y0-py),best.y1-best.y0+1+py*2)
+ },1900);
 }
 async function recognizeNumericLine(worker,base,kind){
  const variants=[
@@ -821,9 +890,9 @@ async function runOcr(file){
    }
 
    setOcrStatus('商品番号を読み取っています…');
-   // 左上の大きな商品番号「1行」だけを狭く切り出して読む
-   const itemRect={x:tag.width*.035,y:tag.height*.018,w:tag.width*.43,h:tag.height*.155};
-   const itemBase=cropCanvas(tag,itemRect,1800);
+   // 上半分左側から「最も大きい文字行」を自動検出。値札ごとの余白差に追従する。
+   const itemSearchRect={x:tag.width*.01,y:tag.height*.00,w:tag.width*.64,h:tag.height*.38};
+   const itemBase=locateLargestTextLine(tag,itemSearchRect,'item');
    const itemDebugUrl=canvasToPreview(itemBase);
    if(itemDebugUrl){$('debugItemImg').src=itemDebugUrl;$('ocrDebug').classList.add('show');}
 
@@ -843,9 +912,9 @@ async function runOcr(file){
    if(!itemNo)itemNo=await recognizeFontDigits(worker,itemBase,5,8);
 
    setOcrStatus('店頭価格を読み取っています…');
-   // 右下の大きな価格「1行」だけを狭く切り出して読む
-   const priceRect={x:tag.width*.55,y:tag.height*.50,w:tag.width*.42,h:tag.height*.40};
-   const priceBase=cropCanvas(tag,priceRect,2000);
+   // 右下領域から「最も大きい文字行」を自動検出。
+   const priceSearchRect={x:tag.width*.40,y:tag.height*.34,w:tag.width*.59,h:tag.height*.64};
+   const priceBase=locateLargestTextLine(tag,priceSearchRect,'price');
    const priceDebugUrl=canvasToPreview(priceBase);
    if(priceDebugUrl){$('debugPriceImg').src=priceDebugUrl;$('ocrDebug').classList.add('show');}
    const priceFont=recognizeCostcoDigitsByFont(priceBase,3,5);
@@ -895,7 +964,7 @@ async function runOcr(file){
    const count=[okNo,okName,okPrice].filter(Boolean).length;
 
    if(count===3){
-     setOcrStatus('v0.6.8：コストコ値札の数字フォント形状をTimes系・Georgia系のテンプレートと照合し、通常OCRより先に商品番号と価格を判定します。','ok');
+     setOcrStatus('v0.7.0：商品番号と価格は固定座標ではなく、値札内の大きな文字行を自動検出して読みます。商品名は英字を優先し、壊れた日本語は自動入力しません。','ok');
    }else if(count>0){
      const miss=[];
      if(!okNo)miss.push('商品番号');
